@@ -56,6 +56,11 @@ body { background: #eef2f6; font-family: 'Segoe UI', system-ui, sans-serif; }
 .form-control-result { font-weight: 600; color: #0f172a; border-color: #94d3cb; }
 .form-control-result:focus { border-color: var(--olive); box-shadow: 0 0 0 0.2rem rgba(15, 139, 126, 0.18); background: #fafffe; }
 .cursor-pointer { cursor: pointer; }
+.expand-btn { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; padding: 0; transition: background 0.15s ease; }
+.expand-btn:hover { background: #dce7e5; }
+.test-card-header.cursor-pointer:hover { background: #eaf4f2; }
+.hover-test-item { transition: background 0.15s ease; }
+.hover-test-item:hover { background: #f0f7f5; }
 
 #printArea { display: none; }
 .rcpt { font-family: Arial, sans-serif; color: #000; width: 100%; max-width: 640px; padding: 16px; font-size: 14px; }
@@ -69,9 +74,87 @@ body { background: #eef2f6; font-family: 'Segoe UI', system-ui, sans-serif; }
 .rcpt .num { text-align: right; }
 .rcpt .sign { margin-top: 50px; display: flex; justify-content: space-between; font-size: 12px; }
 
+/* Report Page Layout (Pre-printed Letterhead Paper) */
+.report-page {
+  font-family: Arial, sans-serif;
+  color: #000;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto 30px auto;
+  box-sizing: border-box;
+  background: #fff;
+  padding: 20px;
+}
+
+/* Render container for html2pdf.js */
+#pdfRenderWrap, .pdf-render-wrap {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 794px;
+  background: #ffffff !important;
+  z-index: 999990;
+  margin: 0;
+  padding: 0;
+}
+#pdfRenderWrap .report-page, .pdf-render-wrap .report-page {
+  box-sizing: border-box !important;
+  width: 794px !important;
+  max-width: 794px !important;
+  min-height: 1120px !important;
+  padding-top: 65mm !important;
+  padding-bottom: 25mm !important;
+  padding-left: 16mm !important;
+  padding-right: 16mm !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  page-break-after: always !important;
+  break-after: page !important;
+  margin: 0 !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+#pdfRenderWrap .report-page:last-child, .pdf-render-wrap .report-page:last-child {
+  page-break-after: avoid !important;
+  break-after: avoid !important;
+}
+
 @media print {
-  html, body { background: #fff; height: 100%; margin: 0; }
+  html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
   .no-print { display: none !important; }
-  #printArea { display: flex !important; position: fixed; inset: 0; align-items: center; justify-content: center; }
-  @page { size: A4; margin: 10mm; }
+  #printArea {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  .report-page {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 297mm !important;
+    padding-top: 65mm !important; /* Space for pre-printed letterhead */
+    padding-bottom: 25mm !important; /* Space for pre-printed footer */
+    padding-left: 16mm !important;
+    padding-right: 16mm !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    margin: 0 !important;
+  }
+  .report-page:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+  .rcpt {
+    margin: 30px auto !important;
+  }
 }

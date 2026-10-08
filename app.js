@@ -74,8 +74,7 @@ const TEST_TEMPLATES = {
       { name: 'MONOCYTE', unit: '%', range: '2-10', indent: true },
       { name: 'EOSINOPHILS', unit: '%', range: '1 - 6', indent: true },
       { name: 'BASOPHILS', unit: '%', range: '< 2', indent: true },
-      { name: 'PLATELET COUNT', unit: 'Lacs/cu.mm', range: '1.5 - 4.1' },
-      { name: 'ESR', unit: 'mm. after 1 hr.', range: 'Upto 35' }
+      { name: 'PLATELET COUNT', unit: 'Lacs/cu.mm', range: '1.5 - 4.1' }
     ]
   },
   lipid: {
@@ -211,15 +210,65 @@ function nextLab() {
   return String((nums.length ? Math.max(...nums) : 1000) + 1);
 }
 function renderTestSelect() {
-  $('testSelect').innerHTML = '<option value="">-- Select Test --</option>' +
-    tests.map((t, i) => `<option value="${i}">${esc(t.name)} — ₹${t.price}</option>`).join('');
+  if ($('testSelect')) {
+    $('testSelect').innerHTML = '<option value="">-- Select Test --</option>' +
+      tests.map((t, i) => `<option value="${i}">${esc(t.name)} — ₹${t.price}</option>`).join('');
+  }
+  renderTestDropdownList();
 }
+
+function renderTestDropdownList() {
+  const listEl = $('testDropdownList');
+  if (!listEl) return;
+  const q = ($('testDropdownSearch')?.value || '').trim().toLowerCase();
+  const selNames = new Set(selected.map(s => s.name.toLowerCase()));
+
+  const filtered = tests.map((t, i) => ({ t, i })).filter(({ t }) => t.name.toLowerCase().includes(q));
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div class="text-center text-muted py-3 small">No matching tests found</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(({ t, i }) => {
+    const isSel = selNames.has(t.name.toLowerCase());
+    return `
+      <div class="d-flex justify-content-between align-items-center p-2 rounded hover-test-item border-bottom">
+        <div class="me-2 text-truncate">
+          <div class="fw-semibold text-dark text-truncate">${esc(t.name)}</div>
+          <div class="text-muted small">₹${t.price}</div>
+        </div>
+        <button type="button" class="btn btn-sm ${isSel ? 'btn-success' : 'btn-outline-primary'} text-nowrap px-3 py-1" onclick="toggleSelectTest(${i}); event.stopPropagation();">
+          ${isSel ? '<i class="bi bi-check-lg me-1"></i>Added' : '<i class="bi bi-plus-lg me-1"></i>Add'}
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  if ($('testDropdownBadge')) {
+    $('testDropdownBadge').textContent = `${selected.length} selected`;
+  }
+}
+
+window.toggleSelectTest = i => {
+  const item = tests[i];
+  if (!item) return;
+  const existingIdx = selected.findIndex(s => s.name.toLowerCase() === item.name.toLowerCase());
+  if (existingIdx >= 0) {
+    selected.splice(existingIdx, 1);
+  } else {
+    selected.push({ ...item });
+  }
+  renderSelected();
+};
+
 function renderSelected() {
   $('selectedTests').innerHTML = selected.length ? selected.map((t, i) =>
     `<tr><td>${esc(t.name)}</td><td class="text-end">${t.price}</td>
      <td class="text-end"><button class="btn btn-sm btn-outline-danger" onclick="removeSel(${i})"><i class="bi bi-x-lg"></i></button></td></tr>`).join('')
     : '<tr><td colspan="3" class="text-center text-muted">No tests added</td></tr>';
   updateTotals();
+  renderTestDropdownList();
 }
 const total = () => selected.reduce((s, t) => s + Number(t.price), 0);
 function updateTotals() {
@@ -233,11 +282,12 @@ $('addTestBtn').onclick = () => {
   selected.push({ ...tests[i] }); $('testSelect').value = ''; renderSelected();
 };
 $('advance').oninput = updateTotals;
+if ($('testDropdownSearch')) $('testDropdownSearch').oninput = renderTestDropdownList;
 
 function collect() {
   return {
     labNo: $('labNo').value.trim(), date: $('date').value, name: $('name').value.trim(),
-    age: $('age').value, gender: $('gender').value, refBy: $('refBy').value.trim(),
+    age: $('age').value, gender: $('gender').value, refBy: $('refBy') ? $('refBy').value.trim() : '',
     tests: selected.map(t => ({ ...t })), total: total(), advance: Number($('advance').value) || 0,
     doctor: $('doctor').value.trim(), reportTime: $('reportTime').value, reportDate: $('reportDate').value
   };
@@ -255,7 +305,7 @@ function save() {
   return r;
 }
 function clearForm() {
-  ['name', 'age', 'gender', 'refBy', 'doctor'].forEach(k => $(k).value = '');
+  ['name', 'age', 'gender', 'doctor'].forEach(k => { if ($(k)) $(k).value = ''; });
   $('advance').value = 0; $('reportTime').value = '10:00';
   $('labNo').value = nextLab(); $('date').value = today(); $('reportDate').value = today();
   selected = []; renderSelected();
@@ -287,51 +337,219 @@ function printReceipt(r) {
   </div>`);
 }
 
-function printReport(r) {
-  let rows = '';
-  (r.tests || []).forEach(t => {
-    const x = (r.results || {})[t.name] || {};
-    if (x.isDetailed && x.params) {
-      const tmpl = TEST_TEMPLATES[x.templateId] || findTemplate(t.name);
-      rows += `<tr style="background:#eaf4f2; font-weight:bold;"><td colspan="4" style="padding:6px 8px; text-transform:uppercase;">${esc(t.name)}</td></tr>`;
-      if (tmpl) {
-        tmpl.items.forEach(item => {
-          if (item.isHeader) {
-            rows += `<tr style="background:#f8fafc; font-weight:600; font-size:12px;"><td colspan="4" style="padding:4px 8px; text-decoration:underline;">${esc(item.title)}</td></tr>`;
-          } else {
-            const p = x.params[item.name] || {};
-            const val = p.value !== undefined ? p.value : '';
-            const u = p.unit !== undefined ? p.unit : item.unit;
-            const rng = p.range !== undefined ? p.range : item.range;
-            rows += `<tr><td style="padding-left:18px;">${esc(item.name)}</td><td><b>${esc(val)}</b></td><td>${esc(u)}</td><td>${esc(rng)}</td></tr>`;
-          }
-        });
-      } else {
-        Object.keys(x.params).forEach(pName => {
-          const p = x.params[pName] || {};
-          rows += `<tr><td style="padding-left:18px;">${esc(pName)}</td><td><b>${esc(p.value || '')}</b></td><td>${esc(p.unit || '')}</td><td>${esc(p.range || '')}</td></tr>`;
-        });
-      }
-      if (x.remark || tmpl?.remark) {
-        rows += `<tr><td colspan="4" style="font-size:11px; font-style:italic; padding:4px 8px; color:#444;">${esc(x.remark || tmpl.remark)}</td></tr>`;
-      }
-    } else {
-      rows += `<tr><td>${esc(t.name)}</td><td><b>${esc(x.value || '')}</b></td><td>${esc(x.unit || '')}</td><td>${esc(x.range || '')}</td></tr>`;
-    }
-  });
+function getReportHtml(r) {
+  const testsList = r.tests || [];
+  if (!testsList.length) return '';
 
-  printHtml(`<div class="rcpt">
-    <h2>${CLINIC.toUpperCase()}</h2><div class="sub">Laboratory Report</div><hr>
-    <table class="info">
-      <tr><td><b>Lab No:</b> ${esc(r.labNo)}</td><td class="num"><b>Date:</b> ${fmtDate(r.date)}</td></tr>
-      <tr><td><b>Name:</b> ${esc(r.name)}</td><td class="num"><b>Age/Gender:</b> ${esc(r.age)} / ${esc(r.gender)}</td></tr>
-      <tr><td><b>Ref By:</b> ${esc(r.refBy)}</td><td class="num"><b>Doctor:</b> ${esc(r.doctor)}</td></tr>
-    </table><hr>
-    <table class="tests"><thead><tr><th>Test / Investigation</th><th>Result</th><th>Unit</th><th>Reference Range</th></tr></thead><tbody>${rows}</tbody></table>
-    ${r.remarks ? `<p style="margin-top:10px"><b>Remarks:</b> ${esc(r.remarks)}</p>` : ''}
-    <div class="sign"><span>Reported by: ${esc(r.reportedBy)}</span><span>Authorised Signatory</span></div>
-  </div>`);
+  return testsList.map((t, pageIdx) => {
+    const pageNum = pageIdx + 1;
+    const x = (r.results || {})[t.name] || {};
+    const tmpl = TEST_TEMPLATES[x.templateId] || findTemplate(t.name);
+    const isDetailed = Boolean(tmpl);
+
+    let rowsHtml = '';
+    let testTitle = (tmpl ? tmpl.title : t.name).toUpperCase();
+    let methodText = x.method || tmpl?.method || '';
+    let remarkText = x.remark || tmpl?.remark || '';
+
+    if (isDetailed && tmpl) {
+      rowsHtml = tmpl.items.map(item => {
+        if (item.isHeader) {
+          return `<tr><td colspan="4" style="font-weight: bold; text-decoration: underline; padding-top: 10px; padding-bottom: 3px; font-size: 13px;">${esc(item.title)}</td></tr>`;
+        }
+        const p = (x.params && x.params[item.name]) || {};
+        const val = p.value !== undefined && p.value !== '' ? p.value : (item.defaultVal || '');
+        const u = p.unit !== undefined && p.unit !== '' ? p.unit : item.unit;
+        const rng = p.range !== undefined && p.range !== '' ? p.range : item.range;
+        const indentStyle = item.indent ? 'padding-left: 20px;' : '';
+        return `
+          <tr style="line-height: 1.65;">
+            <td style="width: 44%; ${indentStyle}">${esc(item.name)}</td>
+            <td style="width: 18%; font-weight: bold;">${esc(val)}</td>
+            <td style="width: 16%;">${esc(u)}</td>
+            <td style="width: 22%;">${esc(rng)}</td>
+          </tr>
+        `;
+      }).join('');
+    } else {
+      const val = x.value || '';
+      const u = x.unit || '';
+      const rng = x.range || '';
+      rowsHtml = `
+        <tr style="line-height: 1.8;">
+          <td style="width: 44%; font-weight: 500;">${esc(t.name)}</td>
+          <td style="width: 18%; font-weight: bold;">${esc(val)}</td>
+          <td style="width: 16%;">${esc(u)}</td>
+          <td style="width: 22%;">${esc(rng)}</td>
+        </tr>
+      `;
+    }
+
+    const isLipid = (tmpl?.id === 'lipid') || t.name.toLowerCase().includes('lipid');
+
+    return `
+      <div class="report-page">
+        <div class="report-top-content">
+          <div style="text-align: center; margin-bottom: 8px; font-size: 13px;">
+            <span style="font-weight: bold; text-decoration: underline;">Page : ${pageNum}</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; font-size: 13px; line-height: 1.65; margin-bottom: 8px;">
+            <table style="border-collapse: collapse; font-size: 13px; line-height: 1.65;">
+              <tr>
+                <td style="padding: 1px 6px 1px 0; font-weight: bold; white-space: nowrap;">Lab No.</td>
+                <td style="padding: 1px 16px 1px 0;">: <b>${esc(r.labNo)}</b></td>
+              </tr>
+              <tr>
+                <td style="padding: 1px 6px 1px 0; font-weight: bold; white-space: nowrap;">NAME</td>
+                <td style="padding: 1px 16px 1px 0;">: <b>${esc((r.name || '').toUpperCase())}</b>&nbsp;&nbsp;&nbsp;&nbsp;<b>Age :</b>&nbsp;&nbsp;${esc(r.age)} Years, ${esc(r.gender)}</td>
+              </tr>
+              ${r.doctor ? `
+              <tr>
+                <td style="padding: 1px 6px 1px 0; font-weight: bold; white-space: nowrap;">Doctor</td>
+                <td style="padding: 1px 16px 1px 0;">: ${esc(r.doctor)}</td>
+              </tr>` : ''}
+            </table>
+            <table style="border-collapse: collapse; font-size: 13px; line-height: 1.65; margin-left: auto;">
+              <tr>
+                <td style="padding: 1px 6px 1px 0; font-weight: bold; white-space: nowrap;">Reporting Date</td>
+                <td style="padding: 1px 0; white-space: nowrap;">:&nbsp;&nbsp;${fmtDate(r.reportDate || r.date)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 1px 6px 1px 0; font-weight: bold; white-space: nowrap;">Sampling Date</td>
+                <td style="padding: 1px 0; white-space: nowrap;">:&nbsp;&nbsp;${fmtDate(r.date)}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 4px 0; margin-bottom: 14px; font-weight: bold; font-size: 13px; display: flex;">
+            <div style="width: 44%;">Investigation</div>
+            <div style="width: 18%;">Result</div>
+            <div style="width: 16%;">Unit</div>
+            <div style="width: 22%;">Reference range</div>
+          </div>
+
+          <div style="text-align: center; font-size: 15px; font-weight: bold; margin-bottom: 14px; text-decoration: underline; letter-spacing: 0.5px;">
+            ${esc(testTitle)}
+          </div>
+
+          <table style="width: 100%; font-size: 12.5px; border-collapse: collapse;">
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+
+          ${isLipid ? `
+            <div style="margin-top: 18px; font-size: 11.5px;">
+              <div style="font-weight: bold; text-decoration: underline; margin-bottom: 4px;">Reference Range :-</div>
+              <table style="width: 95%; border-collapse: collapse; font-size: 11px; margin-left: 6px; line-height: 1.5;">
+                <tr style="border-bottom: 1px dashed #777;">
+                  <th style="text-align: left; padding: 2px 4px;"></th>
+                  <th style="text-align: left; padding: 2px 4px; text-decoration: underline;">Cholesterol</th>
+                  <th style="text-align: left; padding: 2px 4px; text-decoration: underline;">Triglyceride</th>
+                  <th style="text-align: left; padding: 2px 4px; text-decoration: underline;">Total : HDL Ratio</th>
+                </tr>
+                <tr><td style="padding: 2px 4px;">Desirable</td><td style="padding: 2px 4px;">Below 200</td><td style="padding: 2px 4px;">Below 200</td><td style="padding: 2px 4px;">Below 3.5</td></tr>
+                <tr><td style="padding: 2px 4px;">Borderline</td><td style="padding: 2px 4px;">200 to 250</td><td style="padding: 2px 4px;">200 to 400 with normal Cholesterol</td><td style="padding: 2px 4px;">3.5 to 5.5</td></tr>
+                <tr><td style="padding: 2px 4px;">High</td><td style="padding: 2px 4px;">250 to 300</td><td style="padding: 2px 4px;">200 to 400 with high Cholesterol</td><td style="padding: 2px 4px;">Above 5.5</td></tr>
+                <tr><td style="padding: 2px 4px;">Very High</td><td style="padding: 2px 4px;">Above 300</td><td style="padding: 2px 4px;">Above 400</td><td style="padding: 2px 4px;"></td></tr>
+              </table>
+            </div>
+          ` : ''}
+
+          ${remarkText ? `<div style="margin-top: 14px; font-size: 11px; font-weight: bold;">${esc(remarkText)}</div>` : ''}
+          ${methodText ? `<div style="margin-top: 10px; font-size: 11.5px;">${esc(methodText)}</div>` : ''}
+          ${r.remarks ? `<div style="margin-top: 10px; font-size: 12px;"><b>Remarks:</b> ${esc(r.remarks)}</div>` : ''}
+        </div>
+
+        <div class="report-bottom-content" style="margin-top: auto; padding-top: 25px;">
+          <div style="border-top: 1px solid #000; padding-top: 16px; display: flex; justify-content: space-between; align-items: flex-end; font-size: 13px;">
+            <div style="font-weight: bold; font-style: italic;">Checked By</div>
+            <div style="text-align: right; line-height: 1.35;">
+              <b>Dr. Hanish Kumar Chawda, MBBS, MD</b><br>
+              <span style="font-size: 12px; color: #222;">Pathologist, Olive Diagnostics, Raigarh</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('\n<div class="html2pdf__page-break" style="page-break-after: always; break-after: page;"></div>\n');
 }
+
+function printReport(r) {
+  if (!r) return toast('No report to print');
+  const html = getReportHtml(r);
+  if (!html) return toast('No tests to print');
+  printHtml(html);
+}
+
+function downloadReportPdf(r) {
+  if (!r) r = saveEditor();
+  if (!r) return;
+  const html = getReportHtml(r);
+  if (!html) return toast('No tests to print');
+
+  // Loading overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'pdfOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999999;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:#fff;padding:20px 32px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,0.3);display:flex;align-items:center;gap:14px;font-weight:600;font-size:15px;color:#1e293b;">
+      <div class="spinner-border text-danger" role="status" style="width:1.75rem;height:1.75rem;"></div>
+      <span>Generating PDF, please wait...</span>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  // Render container at top: 0, left: 0
+  const container = document.createElement('div');
+  container.id = 'pdfRenderWrap';
+  container.className = 'pdf-render-wrap';
+  container.innerHTML = html;
+  document.body.appendChild(container);
+
+  const prevScrollY = window.scrollY;
+  const prevScrollX = window.scrollX;
+  window.scrollTo(0, 0);
+
+  const opt = {
+    margin: [0, 0, 0, 0],
+    filename: `Report_${r.labNo}_${(r.name || 'Patient').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      scrollY: 0,
+      scrollX: 0,
+      windowWidth: 794
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css', 'legacy'] }
+  };
+
+  const cleanup = () => {
+    if (container.parentNode) container.parentNode.removeChild(container);
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    window.scrollTo(prevScrollX, prevScrollY);
+  };
+
+  if (window.html2pdf) {
+    window.html2pdf().set(opt).from(container).save().then(() => {
+      cleanup();
+      toast('PDF downloaded successfully');
+    }).catch(err => {
+      console.error('PDF generation error:', err);
+      cleanup();
+      toast('PDF error: opened print window');
+      printReport(r);
+    });
+  } else {
+    cleanup();
+    toast('PDF library not ready, opening print window');
+    printReport(r);
+  }
+}
+window.downloadPdfRep = l => { const r = find(l); if (r) downloadReportPdf(r); };
 
 /* ---------- SAVED (receptionist) ---------- */
 function renderSaved() {
@@ -342,7 +560,9 @@ function renderSaved() {
     <td>${r.status === 'done' ? '<span class="badge bg-success">Ready</span>' : '<span class="badge bg-warning text-dark">Pending</span>'}</td>
     <td class="text-end text-nowrap"><button class="btn btn-sm btn-outline-primary me-1" title="Edit" onclick="openRcpt('${esc(r.labNo)}')"><i class="bi bi-pencil"></i></button>
     <button class="btn btn-sm btn-outline-warning me-1" title="Print receipt" onclick="printRcpt('${esc(r.labNo)}')"><i class="bi bi-printer"></i></button>
-    ${r.status === 'done' ? `<button class="btn btn-sm btn-outline-success me-1" title="Print report" onclick="printRep('${esc(r.labNo)}')"><i class="bi bi-file-earmark-medical"></i></button>` : ''}
+    ${r.status === 'done' ? `
+      <button class="btn btn-sm btn-outline-danger me-1" title="Download PDF" onclick="downloadPdfRep('${esc(r.labNo)}')"><i class="bi bi-file-earmark-pdf"></i></button>
+      <button class="btn btn-sm btn-outline-success me-1" title="Print report" onclick="printRep('${esc(r.labNo)}')"><i class="bi bi-file-earmark-medical"></i></button>` : ''}
     <button class="btn btn-sm btn-outline-danger" onclick="delRcpt('${esc(r.labNo)}')"><i class="bi bi-trash"></i></button></td></tr>`).join('')
     : '<tr><td colspan="8" class="text-center text-muted">No receipts</td></tr>';
 }
@@ -352,7 +572,7 @@ window.printRep = l => printReport(find(l));
 window.delRcpt = l => { if (confirm('Delete receipt ' + l + '?')) { receipts = receipts.filter(r => r.labNo !== l); persist(); renderSaved(); updateBadge(); } };
 window.openRcpt = l => {
   const r = find(l);
-  ['labNo', 'date', 'name', 'age', 'gender', 'refBy', 'advance', 'doctor', 'reportTime', 'reportDate'].forEach(k => $(k).value = r[k]);
+  ['labNo', 'date', 'name', 'age', 'gender', 'advance', 'doctor', 'reportTime', 'reportDate'].forEach(k => { if ($(k)) $(k).value = r[k] || ''; });
   selected = r.tests.map(t => ({ ...t })); renderSelected(); show('receipt');
 };
 
@@ -393,8 +613,9 @@ function renderDone() {
   const list = receipts.filter(r => r.status === 'done').slice().reverse();
   $('doneTable').innerHTML = list.length ? list.map(r => `<tr><td>${esc(r.labNo)}</td><td>${esc(r.name)}</td>
     <td>${r.tests.map(t => esc(t.name)).join(', ')}</td><td>${esc(r.reportedBy)}</td>
-    <td class="text-end text-nowrap"><button class="btn btn-sm btn-outline-primary me-1" onclick="openEditor('${esc(r.labNo)}')"><i class="bi bi-pencil"></i></button>
-    <button class="btn btn-sm btn-warning" onclick="printRep('${esc(r.labNo)}')"><i class="bi bi-printer"></i></button></td></tr>`).join('')
+    <td class="text-end text-nowrap"><button class="btn btn-sm btn-outline-primary me-1" title="Edit" onclick="openEditor('${esc(r.labNo)}')"><i class="bi bi-pencil"></i></button>
+    <button class="btn btn-sm btn-danger me-1" title="Download PDF" onclick="downloadPdfRep('${esc(r.labNo)}')"><i class="bi bi-file-earmark-pdf"></i></button>
+    <button class="btn btn-sm btn-warning" title="Print" onclick="printRep('${esc(r.labNo)}')"><i class="bi bi-printer"></i></button></td></tr>`).join('')
     : '<tr><td colspan="5" class="text-center text-muted py-4">No completed reports</td></tr>';
 }
 let editorState = {};
@@ -415,11 +636,54 @@ function snapshotEditorInputs() {
   });
 }
 
-window.toggleTestDetail = idx => {
-  snapshotEditorInputs();
-  if (!editorState[idx]) return;
-  editorState[idx].isDetailed = !editorState[idx].isDetailed;
-  renderEditorRows();
+window.toggleTestCollapse = (idx, ev) => {
+  if (ev) ev.stopPropagation();
+  const body = $(`testCardBody_${idx}`);
+  const icon = $(`testChevron_${idx}`);
+  const btn = $(`testExpandBtn_${idx}`);
+  const statusBadge = $(`testStatusBadge_${idx}`);
+  if (!body) return;
+  const isNowHidden = body.classList.toggle('d-none');
+  if (editorState[idx]) {
+    editorState[idx].collapsed = isNowHidden;
+  }
+  if (icon) {
+    icon.className = `bi ${isNowHidden ? 'bi-chevron-down' : 'bi-chevron-up'} fs-5 text-secondary`;
+  }
+  if (btn) {
+    btn.title = isNowHidden ? 'Expand' : 'Collapse';
+  }
+  if (statusBadge) {
+    statusBadge.textContent = isNowHidden ? 'Collapsed' : 'Open';
+  }
+};
+window.toggleTestDetail = window.toggleTestCollapse;
+
+window.toggleAllTests = collapsed => {
+  const r = find(editing);
+  if (!r || !r.tests) return;
+  r.tests.forEach((t, i) => {
+    const body = $(`testCardBody_${i}`);
+    const icon = $(`testChevron_${i}`);
+    const btn = $(`testExpandBtn_${i}`);
+    const statusBadge = $(`testStatusBadge_${i}`);
+    if (body) {
+      if (collapsed) body.classList.add('d-none');
+      else body.classList.remove('d-none');
+    }
+    if (editorState[i]) {
+      editorState[i].collapsed = collapsed;
+    }
+    if (icon) {
+      icon.className = `bi ${collapsed ? 'bi-chevron-down' : 'bi-chevron-up'} fs-5 text-secondary`;
+    }
+    if (btn) {
+      btn.title = collapsed ? 'Expand' : 'Collapse';
+    }
+    if (statusBadge) {
+      statusBadge.textContent = collapsed ? 'Collapsed' : 'Open';
+    }
+  });
 };
 
 window.changeTestTemplate = (idx, val) => {
@@ -461,10 +725,10 @@ function renderEditorRows() {
     const st = editorState[i] || {};
     const tmpl = TEST_TEMPLATES[st.templateId] || findTemplate(t.name);
     const hasTmpl = Boolean(tmpl);
-    const isDetailed = Boolean(st.isDetailed && tmpl);
+    const isCollapsed = Boolean(st.collapsed);
 
     let bodyHtml = '';
-    if (isDetailed) {
+    if (hasTmpl) {
       const rows = tmpl.items.map(item => {
         if (item.isHeader) {
           return `<tr class="param-cat-row"><td colspan="4"><i class="bi bi-folder2 me-1"></i>${esc(item.title)}</td></tr>`;
@@ -527,29 +791,19 @@ function renderEditorRows() {
 
     return `
       <div class="card shadow-sm mb-3 test-card">
-        <div class="test-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="test-card-header d-flex justify-content-between align-items-center gap-2 cursor-pointer" onclick="toggleTestCollapse(${i})">
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="fw-bold fs-6 text-dark"><i class="bi bi-clipboard2-pulse text-primary me-1"></i>${esc(t.name)}</span>
-            ${hasTmpl ? `<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-layers me-1"></i>${tmpl.title} (${tmpl.items.filter(x => !x.isHeader).length} Params)</span>` : ''}
+            <span class="fw-bold fs-6 text-dark">${esc(t.name)}</span>
+            ${hasTmpl ? `<span class="badge bg-primary-subtle text-primary border border-primary-subtle small fw-normal">${tmpl.items.filter(x => !x.isHeader).length} parameters</span>` : ''}
           </div>
-          <div class="d-flex align-items-center gap-3">
-            ${hasTmpl ? `
-              <div class="form-check form-switch m-0 d-inline-flex align-items-center gap-2">
-                <input class="form-check-input" type="checkbox" role="switch" id="toggle_${i}" ${isDetailed ? 'checked' : ''} onchange="toggleTestDetail(${i})">
-                <label class="form-check-label small fw-semibold cursor-pointer user-select-none" for="toggle_${i}">
-                  ${isDetailed ? '<span class="text-success"><i class="bi bi-toggle2-on me-1"></i>Detailed Parameters</span>' : '<span class="text-secondary"><i class="bi bi-toggle2-off me-1"></i>Simple Mode</span>'}
-                </label>
-              </div>` : `
-              <select class="form-select form-select-sm" style="width:auto" onchange="changeTestTemplate(${i}, this.value)">
-                <option value="none">-- Single Value --</option>
-                <option value="haematology">Haematology (CBC)</option>
-                <option value="lipid">Lipid Profile</option>
-                <option value="biochemistry">Biochemistry</option>
-                <option value="urine">Urine Analysis</option>
-              </select>`}
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light text-muted border small d-none d-sm-inline" id="testStatusBadge_${i}">${isCollapsed ? 'Collapsed' : 'Open'}</span>
+            <button type="button" class="btn btn-sm btn-light border-0 rounded-circle expand-btn" id="testExpandBtn_${i}" title="${isCollapsed ? 'Expand' : 'Collapse'}" onclick="event.stopPropagation(); toggleTestCollapse(${i});">
+              <i id="testChevron_${i}" class="bi ${isCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'} fs-5 text-secondary"></i>
+            </button>
           </div>
         </div>
-        <div class="card-body p-0">${bodyHtml}</div>
+        <div class="card-body p-0 ${isCollapsed ? 'd-none' : ''}" id="testCardBody_${i}">${bodyHtml}</div>
       </div>
     `;
   }).join('');
@@ -557,21 +811,40 @@ function renderEditorRows() {
   $('edRows').innerHTML = html || '<div class="alert alert-secondary text-center">No tests selected</div>';
 }
 
+if ($('edRows')) {
+  $('edRows').oninput = e => {
+    const inp = e.target;
+    if (!inp || !inp.dataset || inp.dataset.testIdx === undefined) return;
+    const idx = parseInt(inp.dataset.testIdx, 10);
+    if (!editorState[idx]) return;
+    if (inp.dataset.simple === 'true') {
+      editorState[idx][inp.dataset.f] = inp.value;
+    } else {
+      const p = inp.dataset.param;
+      const f = inp.dataset.f;
+      editorState[idx].params = editorState[idx].params || {};
+      editorState[idx].params[p] = editorState[idx].params[p] || {};
+      editorState[idx].params[p][f] = inp.value;
+    }
+  };
+}
+
 window.openEditor = l => {
   const r = find(l);
   editing = l;
   $('edPatient').textContent = `${r.name} — Lab No ${r.labNo}`;
-  $('edMeta').textContent = `${r.age} yrs / ${r.gender} · Ref: ${r.refBy || '-'} · Doctor: ${r.doctor || '-'}`;
+  $('edMeta').textContent = `${r.age} yrs / ${r.gender}${r.doctor ? ' · Doctor: ' + r.doctor : ''}`;
   
   editorState = {};
   (r.tests || []).forEach((t, i) => {
     const prev = (r.results || {})[t.name];
     if (prev) {
       editorState[i] = JSON.parse(JSON.stringify(prev));
-      if (editorState[i].isDetailed === undefined) {
-        const tmpl = findTemplate(t.name);
-        editorState[i].isDetailed = Boolean(tmpl);
-        if (tmpl) editorState[i].templateId = tmpl.id;
+      const tmpl = TEST_TEMPLATES[editorState[i].templateId] || findTemplate(t.name);
+      if (tmpl) {
+        editorState[i].isDetailed = true;
+        editorState[i].templateId = tmpl.id;
+        editorState[i].params = editorState[i].params || {};
       }
     } else {
       const tmpl = findTemplate(t.name);
@@ -592,6 +865,7 @@ window.openEditor = l => {
         };
       }
     }
+    editorState[i].collapsed = false;
   });
 
   renderEditorRows();
@@ -611,7 +885,7 @@ function saveEditor(status) {
   (r.tests || []).forEach((t, i) => {
     const st = editorState[i] || {};
     const tmpl = TEST_TEMPLATES[st.templateId] || findTemplate(t.name);
-    if (st.isDetailed && tmpl) {
+    if (tmpl) {
       r.results[t.name] = {
         isDetailed: true,
         templateId: tmpl.id,
@@ -643,6 +917,7 @@ function saveEditor(status) {
 $('edComplete').onclick = () => { saveEditor('done'); toast('Report completed'); show('pending'); };
 $('edPrintRcpt').onclick = () => printReceipt(saveEditor());
 $('edDraft').onclick = () => { saveEditor(); toast('Draft saved'); };
+if ($('edPdf')) $('edPdf').onclick = () => downloadReportPdf(saveEditor());
 $('edPrint').onclick = () => printReport(saveEditor());
 $('edBack').onclick = () => show('pending');
 
