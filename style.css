@@ -53,14 +53,22 @@ body { background: #eef2f6; font-family: 'Segoe UI', system-ui, sans-serif; }
 .param-cat-row { background: #edf2f7; font-weight: 700; color: #1e293b; font-size: 0.8rem; letter-spacing: 0.5px; text-transform: uppercase; }
 .param-cat-row td { padding: 5px 12px !important; }
 .param-indent { padding-left: 1.75rem !important; }
-.form-control-result { font-weight: 600; color: #0f172a; border-color: #94d3cb; }
-.form-control-result:focus { border-color: var(--olive); box-shadow: 0 0 0 0.2rem rgba(15, 139, 126, 0.18); background: #fafffe; }
+.form-control-result { font-weight: 600; color: #0f172a; border-color: #94d3cb; transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease; }
+.form-control-result:focus { border-color: var(--olive); box-shadow: 0 0 0 0.2rem rgba(15, 139, 126, 0.25); background: #f0fdf9; }
+.test-card table tbody tr:has(input:focus) { background-color: #f2fbf9 !important; }
+.test-card table tbody tr:has(input:focus) td:first-child { color: var(--olive); font-weight: 700; }
 .cursor-pointer { cursor: pointer; }
 .expand-btn { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; padding: 0; transition: background 0.15s ease; }
 .expand-btn:hover { background: #dce7e5; }
 .test-card-header.cursor-pointer:hover { background: #eaf4f2; }
 .hover-test-item { transition: background 0.15s ease; }
 .hover-test-item:hover { background: #f0f7f5; }
+.kbd-hint { font-size: 0.76rem; color: #64748b; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px; padding: 2px 7px; }
+.urine-remark-box, .test-remark-box { background: #fcfefe; border-top: 1px solid #d8e5e3; }
+.urine-remark-box textarea, .test-remark-box textarea { border-color: #a3d9d2; }
+.urine-remark-box textarea:focus, .test-remark-box textarea:focus { border-color: var(--olive); box-shadow: 0 0 0 0.2rem rgba(15, 139, 126, 0.25); background: #f0fdf9; }
+.ready-phrase-btn { transition: all 0.15s ease; line-height: 1.4; }
+.ready-phrase-btn:hover { transform: translateY(-1px); }
 
 #printArea { display: none; }
 .rcpt { font-family: Arial, sans-serif; color: #000; width: 100%; max-width: 640px; padding: 16px; font-size: 14px; }
@@ -101,23 +109,27 @@ body { background: #eef2f6; font-family: 'Segoe UI', system-ui, sans-serif; }
   box-sizing: border-box !important;
   width: 794px !important;
   max-width: 794px !important;
-  min-height: 1120px !important;
-  padding-top: 65mm !important;
-  padding-bottom: 25mm !important;
-  padding-left: 16mm !important;
-  padding-right: 16mm !important;
+  height: 1120px !important;
+  max-height: 1120px !important;
+  padding-top: 175px !important; /* ~15.6% space for pre-printed letterhead header */
+  padding-bottom: 135px !important; /* ~12% clearance to stay above pre-printed letterhead footer */
+  padding-left: 55px !important;
+  padding-right: 55px !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between !important;
   page-break-after: always !important;
   break-after: page !important;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  overflow: hidden !important;
   margin: 0 !important;
   background: #ffffff !important;
   color: #000000 !important;
 }
 #pdfRenderWrap .report-page:last-child, .pdf-render-wrap .report-page:last-child {
-  page-break-after: avoid !important;
-  break-after: avoid !important;
+  page-break-after: auto !important;
+  break-after: auto !important;
 }
 
 @media print {
@@ -136,25 +148,45 @@ body { background: #eef2f6; font-family: 'Segoe UI', system-ui, sans-serif; }
   }
   .report-page {
     box-sizing: border-box !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: 297mm !important;
-    padding-top: 65mm !important; /* Space for pre-printed letterhead */
-    padding-bottom: 25mm !important; /* Space for pre-printed footer */
-    padding-left: 16mm !important;
-    padding-right: 16mm !important;
+    width: 210mm !important;
+    max-width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    padding-top: 46mm !important; /* ~15.5% space for pre-printed letterhead header */
+    padding-bottom: 35mm !important; /* ~11.8% clearance to stay well above pre-printed letterhead footer */
+    padding-left: 15mm !important;
+    padding-right: 15mm !important;
     page-break-after: always !important;
     break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
   }
   .report-page:last-child {
-    page-break-after: avoid !important;
-    break-after: avoid !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+  .report-bottom-content {
+    margin-top: auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
   .rcpt {
     margin: 30px auto !important;
   }
+}
+
+.is-abnormal-input {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+  color: #991b1b !important;
+  font-weight: 700 !important;
+}
+.is-abnormal-input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.25) !important;
 }

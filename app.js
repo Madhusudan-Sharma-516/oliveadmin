@@ -51,6 +51,20 @@ function ensureDefaultTests() {
 }
 ensureDefaultTests();
 
+const URINE_READY_REMARKS = [
+  "NOTE:- MICROSCOPIC EXAMINATION OF URINE IS PERFORMED BY CENTRIFUGED URINARY SEDIMENT.",
+  "NOTE : URINE PROTEIN CONFIRMED MANUALLY BY SULPHOSALICYLIC ACID.",
+  "NOTE: URINE GLUCOSE RECHECKED AND CONFIRMED BY BENEDICT TEST.",
+  "MYCOBACTERIUM LEPRAE",
+  "AFB NOT SEEN.",
+  "MUCUS THREAD SEEN.",
+  "BUDDING YEAST CELL SEEN.",
+  "CALCIUM OXALATE SEEN.",
+  "AMORPHOUS PHOSPHATES SEEN.",
+  "AMORPHOUS URATES SEEN.",
+  "HB ELECTROPHORESIS / HPLC."
+];
+
 const TEST_TEMPLATES = {
   haematology: {
     id: 'haematology',
@@ -337,6 +351,51 @@ function printReceipt(r) {
   </div>`);
 }
 
+function checkValueRange(valStr, rangeStr) {
+  if (valStr === undefined || valStr === null || rangeStr === undefined || rangeStr === null) return 'normal';
+  const rawVal = String(valStr).trim();
+  const rawRng = String(rangeStr).trim();
+  if (!rawVal || !rawRng) return 'normal';
+
+  const v = parseFloat(rawVal.replace(/,/g, ''));
+  if (isNaN(v)) {
+    const uVal = rawVal.toUpperCase();
+    const uRng = rawRng.toUpperCase();
+    if (uRng === 'NIL' || uRng === 'NEGATIVE') {
+      const normalTokens = ['NIL', 'NEGATIVE', 'NEG', '0', '-', 'CLEAR', 'ACIDIC', 'PALE YELLOW', 'NORMAL'];
+      if (!normalTokens.includes(uVal)) {
+        return 'abnormal';
+      }
+    }
+    return 'normal';
+  }
+
+  const rangeMatch = rawRng.match(/^([0-9.]+)\s*(?:-|to)\s*([0-9.]+)$/i);
+  if (rangeMatch) {
+    const min = parseFloat(rangeMatch[1]);
+    const max = parseFloat(rangeMatch[2]);
+    if (!isNaN(min) && v < min) return 'low';
+    if (!isNaN(max) && v > max) return 'high';
+    return 'normal';
+  }
+
+  const maxMatch = rawRng.match(/^(?:upto|below|<|<=)\s*([0-9.]+)/i);
+  if (maxMatch) {
+    const max = parseFloat(maxMatch[1]);
+    if (!isNaN(max) && v > max) return 'high';
+    return 'normal';
+  }
+
+  const minMatch = rawRng.match(/^(?:above|>|>=)\s*([0-9.]+)/i);
+  if (minMatch) {
+    const min = parseFloat(minMatch[1]);
+    if (!isNaN(min) && v < min) return 'low';
+    return 'normal';
+  }
+
+  return 'normal';
+}
+
 function getReportHtml(r) {
   const testsList = r.tests || [];
   if (!testsList.length) return '';
@@ -355,19 +414,25 @@ function getReportHtml(r) {
     if (isDetailed && tmpl) {
       rowsHtml = tmpl.items.map(item => {
         if (item.isHeader) {
-          return `<tr><td colspan="4" style="font-weight: bold; text-decoration: underline; padding-top: 10px; padding-bottom: 3px; font-size: 13px;">${esc(item.title)}</td></tr>`;
+          return `<tr><td colspan="4" style="font-weight: bold; text-decoration: underline; padding-top: 6px; padding-bottom: 2px; font-size: 12px;">${esc(item.title)}</td></tr>`;
         }
         const p = (x.params && x.params[item.name]) || {};
         const val = p.value !== undefined && p.value !== '' ? p.value : (item.defaultVal || '');
         const u = p.unit !== undefined && p.unit !== '' ? p.unit : item.unit;
         const rng = p.range !== undefined && p.range !== '' ? p.range : item.range;
-        const indentStyle = item.indent ? 'padding-left: 20px;' : '';
+        const rangeStatus = checkValueRange(val, rng);
+        const isAbnormal = rangeStatus === 'high' || rangeStatus === 'low' || rangeStatus === 'abnormal';
+        const indentStyle = item.indent ? 'padding-left: 16px;' : '';
+        const valDisplay = isAbnormal ? `
+          <span style="font-weight: 900; color: #b91c1c; border-bottom: 1.5px solid #b91c1c; padding-bottom: 1px; display: inline-block;">
+            ${esc(val)} <span style="font-size: 9.5px; font-weight: 800; color: #b91c1c; border: 1px solid #b91c1c; padding: 0 2px; border-radius: 2px; margin-left: 2px; vertical-align: middle;">${rangeStatus === 'high' ? 'H' : rangeStatus === 'low' ? 'L' : '*'}</span>
+          </span>` : `<span>${esc(val)}</span>`;
         return `
-          <tr style="line-height: 1.65;">
-            <td style="width: 44%; ${indentStyle}">${esc(item.name)}</td>
-            <td style="width: 18%; font-weight: bold;">${esc(val)}</td>
-            <td style="width: 16%;">${esc(u)}</td>
-            <td style="width: 22%;">${esc(rng)}</td>
+          <tr style="line-height: 1.45; border-bottom: 1px solid #f1f5f9;">
+            <td style="width: 44%; padding: 2px 0; ${indentStyle}">${esc(item.name)}</td>
+            <td style="width: 18%; padding: 2px 0; font-weight: bold;">${valDisplay}</td>
+            <td style="width: 16%; padding: 2px 0;">${esc(u)}</td>
+            <td style="width: 22%; padding: 2px 0;">${esc(rng)}</td>
           </tr>
         `;
       }).join('');
@@ -375,12 +440,18 @@ function getReportHtml(r) {
       const val = x.value || '';
       const u = x.unit || '';
       const rng = x.range || '';
+      const rangeStatus = checkValueRange(val, rng);
+      const isAbnormal = rangeStatus === 'high' || rangeStatus === 'low' || rangeStatus === 'abnormal';
+      const valDisplay = isAbnormal ? `
+        <span style="font-weight: 900; color: #b91c1c; border-bottom: 1.5px solid #b91c1c; padding-bottom: 1px; display: inline-block;">
+          ${esc(val)} <span style="font-size: 9.5px; font-weight: 800; color: #b91c1c; border: 1px solid #b91c1c; padding: 0 2px; border-radius: 2px; margin-left: 2px; vertical-align: middle;">${rangeStatus === 'high' ? 'H' : rangeStatus === 'low' ? 'L' : '*'}</span>
+        </span>` : `<span>${esc(val)}</span>`;
       rowsHtml = `
-        <tr style="line-height: 1.8;">
-          <td style="width: 44%; font-weight: 500;">${esc(t.name)}</td>
-          <td style="width: 18%; font-weight: bold;">${esc(val)}</td>
-          <td style="width: 16%;">${esc(u)}</td>
-          <td style="width: 22%;">${esc(rng)}</td>
+        <tr style="line-height: 1.5; border-bottom: 1px solid #f1f5f9;">
+          <td style="width: 44%; padding: 3px 0; font-weight: 500;">${esc(t.name)}</td>
+          <td style="width: 18%; padding: 3px 0; font-weight: bold;">${valDisplay}</td>
+          <td style="width: 16%; padding: 3px 0;">${esc(u)}</td>
+          <td style="width: 22%; padding: 3px 0;">${esc(rng)}</td>
         </tr>
       `;
     }
@@ -390,12 +461,12 @@ function getReportHtml(r) {
     return `
       <div class="report-page">
         <div class="report-top-content">
-          <div style="text-align: center; margin-bottom: 8px; font-size: 13px;">
+          <div style="text-align: center; margin-bottom: 4px; font-size: 11.5px;">
             <span style="font-weight: bold; text-decoration: underline;">Page : ${pageNum}</span>
           </div>
           
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; font-size: 13px; line-height: 1.65; margin-bottom: 8px;">
-            <table style="border-collapse: collapse; font-size: 13px; line-height: 1.65;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; font-size: 12px; line-height: 1.45; margin-bottom: 6px;">
+            <table style="border-collapse: collapse; font-size: 12px; line-height: 1.45;">
               <tr>
                 <td style="padding: 1px 6px 1px 0; font-weight: bold; white-space: nowrap;">Lab No.</td>
                 <td style="padding: 1px 16px 1px 0;">: <b>${esc(r.labNo)}</b></td>
@@ -410,7 +481,7 @@ function getReportHtml(r) {
                 <td style="padding: 1px 16px 1px 0;">: ${esc(r.doctor)}</td>
               </tr>` : ''}
             </table>
-            <table style="border-collapse: collapse; font-size: 13px; line-height: 1.65; margin-left: auto;">
+            <table style="border-collapse: collapse; font-size: 12px; line-height: 1.45; margin-left: auto;">
               <tr>
                 <td style="padding: 1px 6px 1px 0; font-weight: bold; white-space: nowrap;">Reporting Date</td>
                 <td style="padding: 1px 0; white-space: nowrap;">:&nbsp;&nbsp;${fmtDate(r.reportDate || r.date)}</td>
@@ -422,58 +493,62 @@ function getReportHtml(r) {
             </table>
           </div>
 
-          <div style="border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 4px 0; margin-bottom: 14px; font-weight: bold; font-size: 13px; display: flex;">
+          <div style="border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 3px 0; margin-bottom: 8px; font-weight: bold; font-size: 12px; display: flex;">
             <div style="width: 44%;">Investigation</div>
             <div style="width: 18%;">Result</div>
             <div style="width: 16%;">Unit</div>
             <div style="width: 22%;">Reference range</div>
           </div>
 
-          <div style="text-align: center; font-size: 15px; font-weight: bold; margin-bottom: 14px; text-decoration: underline; letter-spacing: 0.5px;">
+          <div style="text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 8px; text-decoration: underline; letter-spacing: 0.5px;">
             ${esc(testTitle)}
           </div>
 
-          <table style="width: 100%; font-size: 12.5px; border-collapse: collapse;">
+          <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
             <tbody>
               ${rowsHtml}
             </tbody>
           </table>
 
           ${isLipid ? `
-            <div style="margin-top: 18px; font-size: 11.5px;">
-              <div style="font-weight: bold; text-decoration: underline; margin-bottom: 4px;">Reference Range :-</div>
-              <table style="width: 95%; border-collapse: collapse; font-size: 11px; margin-left: 6px; line-height: 1.5;">
+            <div style="margin-top: 10px; font-size: 11px;">
+              <div style="font-weight: bold; text-decoration: underline; margin-bottom: 3px;">Reference Range :-</div>
+              <table style="width: 95%; border-collapse: collapse; font-size: 10.5px; margin-left: 4px; line-height: 1.4;">
                 <tr style="border-bottom: 1px dashed #777;">
-                  <th style="text-align: left; padding: 2px 4px;"></th>
-                  <th style="text-align: left; padding: 2px 4px; text-decoration: underline;">Cholesterol</th>
-                  <th style="text-align: left; padding: 2px 4px; text-decoration: underline;">Triglyceride</th>
-                  <th style="text-align: left; padding: 2px 4px; text-decoration: underline;">Total : HDL Ratio</th>
+                  <th style="text-align: left; padding: 1px 4px;"></th>
+                  <th style="text-align: left; padding: 1px 4px; text-decoration: underline;">Cholesterol</th>
+                  <th style="text-align: left; padding: 1px 4px; text-decoration: underline;">Triglyceride</th>
+                  <th style="text-align: left; padding: 1px 4px; text-decoration: underline;">Total : HDL Ratio</th>
                 </tr>
-                <tr><td style="padding: 2px 4px;">Desirable</td><td style="padding: 2px 4px;">Below 200</td><td style="padding: 2px 4px;">Below 200</td><td style="padding: 2px 4px;">Below 3.5</td></tr>
-                <tr><td style="padding: 2px 4px;">Borderline</td><td style="padding: 2px 4px;">200 to 250</td><td style="padding: 2px 4px;">200 to 400 with normal Cholesterol</td><td style="padding: 2px 4px;">3.5 to 5.5</td></tr>
-                <tr><td style="padding: 2px 4px;">High</td><td style="padding: 2px 4px;">250 to 300</td><td style="padding: 2px 4px;">200 to 400 with high Cholesterol</td><td style="padding: 2px 4px;">Above 5.5</td></tr>
-                <tr><td style="padding: 2px 4px;">Very High</td><td style="padding: 2px 4px;">Above 300</td><td style="padding: 2px 4px;">Above 400</td><td style="padding: 2px 4px;"></td></tr>
+                <tr><td style="padding: 1px 4px;">Desirable</td><td style="padding: 1px 4px;">Below 200</td><td style="padding: 1px 4px;">Below 200</td><td style="padding: 1px 4px;">Below 3.5</td></tr>
+                <tr><td style="padding: 1px 4px;">Borderline</td><td style="padding: 1px 4px;">200 to 250</td><td style="padding: 1px 4px;">200 to 400 with normal Cholesterol</td><td style="padding: 1px 4px;">3.5 to 5.5</td></tr>
+                <tr><td style="padding: 1px 4px;">High</td><td style="padding: 1px 4px;">250 to 300</td><td style="padding: 1px 4px;">200 to 400 with high Cholesterol</td><td style="padding: 1px 4px;">Above 5.5</td></tr>
+                <tr><td style="padding: 1px 4px;">Very High</td><td style="padding: 1px 4px;">Above 300</td><td style="padding: 1px 4px;">Above 400</td><td style="padding: 1px 4px;"></td></tr>
               </table>
             </div>
           ` : ''}
 
-          ${remarkText ? `<div style="margin-top: 14px; font-size: 11px; font-weight: bold;">${esc(remarkText)}</div>` : ''}
-          ${methodText ? `<div style="margin-top: 10px; font-size: 11.5px;">${esc(methodText)}</div>` : ''}
-          ${r.remarks ? `<div style="margin-top: 10px; font-size: 12px;"><b>Remarks:</b> ${esc(r.remarks)}</div>` : ''}
+          ${remarkText ? `
+            <div style="margin-top: 10px; border: 1.5px solid #000; padding: 5px 8px; font-size: 10.5px; border-radius: 3px; background: #fff;">
+              <div style="font-weight: bold; font-size: 10.5px; text-decoration: underline; margin-bottom: 2px; letter-spacing: 0.5px;">REMARK : ${esc(testTitle)}</div>
+              <div style="white-space: pre-line; line-height: 1.45; font-weight: bold; font-size: 10px;">${esc(remarkText)}</div>
+            </div>` : ''}
+          ${methodText ? `<div style="margin-top: 8px; font-size: 11px;">${esc(methodText)}</div>` : ''}
+          ${r.remarks ? `<div style="margin-top: 8px; font-size: 11.5px;"><b>Remarks:</b> ${esc(r.remarks)}</div>` : ''}
         </div>
 
-        <div class="report-bottom-content" style="margin-top: auto; padding-top: 25px;">
-          <div style="border-top: 1px solid #000; padding-top: 16px; display: flex; justify-content: space-between; align-items: flex-end; font-size: 13px;">
+        <div class="report-bottom-content" style="margin-top: auto; padding-top: 8px; page-break-inside: avoid; break-inside: avoid;">
+          <div style="border-top: 1.5px solid #000; padding-top: 6px; display: flex; justify-content: space-between; align-items: flex-end; font-size: 12px;">
             <div style="font-weight: bold; font-style: italic;">Checked By</div>
-            <div style="text-align: right; line-height: 1.35;">
+            <div style="text-align: right; line-height: 1.25;">
               <b>Dr. Hanish Kumar Chawda, MBBS, MD</b><br>
-              <span style="font-size: 12px; color: #222;">Pathologist, Olive Diagnostics, Raigarh</span>
+              <span style="font-size: 11px; color: #222;">Pathologist, Olive Diagnostics, Raigarh</span>
             </div>
           </div>
         </div>
       </div>
     `;
-  }).join('\n<div class="html2pdf__page-break" style="page-break-after: always; break-after: page;"></div>\n');
+  }).join('\n');
 }
 
 function printReport(r) {
@@ -624,7 +699,9 @@ function snapshotEditorInputs() {
   document.querySelectorAll('[data-test-idx]').forEach(inp => {
     const idx = parseInt(inp.dataset.testIdx, 10);
     if (!editorState[idx]) return;
-    if (inp.dataset.simple === 'true') {
+    if (inp.dataset.f === 'remark') {
+      editorState[idx].remark = inp.value;
+    } else if (inp.dataset.simple === 'true') {
       editorState[idx][inp.dataset.f] = inp.value;
     } else {
       const p = inp.dataset.param;
@@ -713,8 +790,64 @@ window.fillUrineDefaults = idx => {
       };
     }
   });
+  if (!editorState[idx].remark) {
+    editorState[idx].remark = tmpl.remark || 'NOTE:- MICROSCOPIC EXAMINATION OF URINE IS PERFORMED BY CENTRIFUGED URINARY SEDIMENT.';
+  }
   renderEditorRows();
   toast('Normal urine values filled');
+};
+
+window.toggleUrineRemarkPhrase = (idx, phraseIdx) => {
+  snapshotEditorInputs();
+  const phrase = URINE_READY_REMARKS[phraseIdx];
+  if (!phrase) return;
+  const textarea = $(`urineRemark_${idx}`);
+  let current = (editorState[idx]?.remark ?? (textarea ? textarea.value : ''));
+  let lines = current.split('\n').map(l => l.trim()).filter(Boolean);
+  const foundIdx = lines.indexOf(phrase.trim());
+  if (foundIdx >= 0) {
+    lines.splice(foundIdx, 1);
+  } else {
+    lines.push(phrase.trim());
+  }
+  const updated = lines.join('\n');
+  if (editorState[idx]) editorState[idx].remark = updated;
+  if (textarea) textarea.value = updated;
+  updateUrinePhraseButtons(idx);
+};
+
+window.resetUrineRemark = idx => {
+  const tmpl = TEST_TEMPLATES.urine;
+  const def = tmpl?.remark || 'NOTE:- MICROSCOPIC EXAMINATION OF URINE IS PERFORMED BY CENTRIFUGED URINARY SEDIMENT.';
+  if (editorState[idx]) editorState[idx].remark = def;
+  const textarea = $(`urineRemark_${idx}`);
+  if (textarea) textarea.value = def;
+  updateUrinePhraseButtons(idx);
+};
+
+window.clearUrineRemark = idx => {
+  if (editorState[idx]) editorState[idx].remark = '';
+  const textarea = $(`urineRemark_${idx}`);
+  if (textarea) textarea.value = '';
+  updateUrinePhraseButtons(idx);
+};
+
+function updateUrinePhraseButtons(idx) {
+  const container = $(`urinePhrases_${idx}`);
+  if (!container) return;
+  const current = (editorState[idx]?.remark || $(`urineRemark_${idx}`)?.value || '');
+  container.querySelectorAll('.ready-phrase-btn').forEach((btn, pIdx) => {
+    const phrase = URINE_READY_REMARKS[pIdx];
+    const isPresent = phrase && current.includes(phrase.trim());
+    btn.className = `btn btn-sm ${isPresent ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2 ready-phrase-btn`;
+    btn.innerHTML = `${isPresent ? '<i class="bi bi-check2 me-1"></i>' : '<i class="bi bi-plus me-1"></i>'}${esc(phrase)}`;
+  });
+};
+
+window.clearTestRemark = idx => {
+  if (editorState[idx]) editorState[idx].remark = '';
+  const textarea = $(`testRemark_${idx}`);
+  if (textarea) textarea.value = '';
 };
 
 function renderEditorRows() {
@@ -735,9 +868,11 @@ function renderEditorRows() {
         }
         const pData = (st.params && st.params[item.name]) || {};
         const pVal = pData.value !== undefined ? pData.value : (item.defaultVal || '');
+        const rangeStatus = checkValueRange(pVal, item.range);
+        const isAbnormal = rangeStatus === 'high' || rangeStatus === 'low' || rangeStatus === 'abnormal';
         return `<tr>
           <td class="${item.indent ? 'param-indent' : 'fw-semibold'}">${esc(item.name)}</td>
-          <td><input class="form-control form-control-sm form-control-result" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="value" value="${esc(pVal)}" placeholder="Enter result..."></td>
+          <td><input class="form-control form-control-sm form-control-result ${isAbnormal ? 'is-abnormal-input' : ''}" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="value" value="${esc(pVal)}" placeholder="Enter result..."></td>
           <td><input class="form-control form-control-sm bg-light text-muted border-0" readonly tabindex="-1" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="unit" value="${esc(item.unit)}"></td>
           <td><input class="form-control form-control-sm bg-light text-muted border-0" readonly tabindex="-1" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="range" value="${esc(item.range)}"></td>
         </tr>`;
@@ -760,11 +895,55 @@ function renderEditorRows() {
         ${tmpl.id === 'urine' ? `
           <div class="p-2 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
             <button type="button" class="btn btn-sm btn-outline-success" onclick="fillUrineDefaults(${i})"><i class="bi bi-magic me-1"></i>Quick Fill Normal Values</button>
-            <span class="small text-muted fst-italic">${esc(tmpl.remark || '')}</span>
-          </div>` : (tmpl.method ? `
-          <div class="p-2 bg-light border-top text-muted small"><i class="bi bi-info-circle me-1"></i>${esc(tmpl.method)}</div>` : '')}
+            <span class="small text-muted"><i class="bi bi-info-circle me-1"></i>Siemens Clinitek Status+ Urine Analyzer</span>
+          </div>
+          <div class="p-3 border-top urine-remark-box">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+              <div class="d-flex align-items-center gap-2">
+                <span class="fw-bold small text-dark"><i class="bi bi-chat-square-text-fill text-primary me-1"></i>REMARK : URINE ANALYSIS</span>
+                <span class="badge bg-secondary-subtle text-secondary border small">Default Fixed Note &middot; Extra Addable</span>
+              </div>
+              <div class="d-flex gap-1">
+                <button type="button" class="btn btn-xs btn-outline-secondary py-1 px-2" style="font-size:0.75rem;" onclick="resetUrineRemark(${i})" title="Reset to standard fixed note">
+                  <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Default
+                </button>
+                <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" style="font-size:0.75rem;" onclick="clearUrineRemark(${i})" title="Clear remarks">
+                  <i class="bi bi-trash me-1"></i>Clear
+                </button>
+              </div>
+            </div>
+            <textarea id="urineRemark_${i}" class="form-control form-control-sm form-control-result mb-2" data-test-idx="${i}" data-f="remark" rows="3" style="font-size: 0.88rem; font-weight: 600; line-height: 1.5; resize: vertical;" placeholder="Urine Analysis remarks (type freely, press Shift+Enter for new line)...">${esc(st.remark !== undefined ? st.remark : (tmpl.remark || ''))}</textarea>
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <span class="small text-muted fw-semibold" style="font-size:0.76rem;">
+                <i class="bi bi-list-check me-1"></i>Readymade Lines (Phrases) — Click to add / remove:
+              </span>
+              <span class="small text-muted d-none d-sm-inline" style="font-size:0.72rem;"><kbd class="bg-white text-dark border px-1">Shift+Enter</kbd> new line &middot; <kbd class="bg-white text-dark border px-1">Enter</kbd> next test</span>
+            </div>
+            <div id="urinePhrases_${i}" class="d-flex flex-wrap gap-1">
+              ${URINE_READY_REMARKS.map((line, pIdx) => {
+                const curRemark = (st.remark !== undefined ? st.remark : (tmpl.remark || ''));
+                const isSel = curRemark.includes(line.trim());
+                return `<button type="button" class="btn btn-sm ${isSel ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2 ready-phrase-btn" style="font-size: 0.74rem; border-radius: 12px; white-space: normal; text-align: left;" onclick="toggleUrineRemarkPhrase(${i}, ${pIdx})">
+                  ${isSel ? '<i class="bi bi-check2 me-1"></i>' : '<i class="bi bi-plus me-1"></i>'}${esc(line)}
+                </button>`;
+              }).join('')}
+            </div>
+          </div>` : `
+          <div class="p-2 border-top bg-light-subtle test-remark-box">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="small fw-semibold text-secondary">
+                <i class="bi bi-chat-left-dots text-primary me-1"></i>Remark / Interpretation (${esc(tmpl.title || t.name)}):
+              </span>
+              ${st.remark ? `<button type="button" class="btn btn-xs btn-outline-danger py-0 px-2" style="font-size:0.72rem;" onclick="clearTestRemark(${i})"><i class="bi bi-x me-1"></i>Clear</button>` : ''}
+            </div>
+            <textarea id="testRemark_${i}" class="form-control form-control-sm form-control-result test-remark-input" data-test-idx="${i}" data-f="remark" rows="2" style="font-size: 0.85rem; resize: vertical;" placeholder="Add remark / interpretation for this test (optional, press Shift+Enter for new line)...">${esc(st.remark || '')}</textarea>
+          </div>
+          ${tmpl.method ? `<div class="p-2 bg-light border-top text-muted small"><i class="bi bi-info-circle me-1"></i>${esc(tmpl.method)}</div>` : ''}
+          `}
       `;
     } else {
+      const nonTmplStatus = checkValueRange(st.value || '', st.range || '');
+      const isAbnormalNonTmpl = nonTmplStatus === 'high' || nonTmplStatus === 'low' || nonTmplStatus === 'abnormal';
       bodyHtml = `
         <div class="table-responsive">
           <table class="table table-bordered table-sm align-middle mb-0">
@@ -779,12 +958,21 @@ function renderEditorRows() {
             <tbody>
               <tr>
                 <td class="fw-semibold">${esc(t.name)}</td>
-                <td><input class="form-control form-control-sm form-control-result" data-test-idx="${i}" data-simple="true" data-f="value" value="${esc(st.value || '')}" placeholder="Enter result..."></td>
+                <td><input class="form-control form-control-sm form-control-result ${isAbnormalNonTmpl ? 'is-abnormal-input' : ''}" data-test-idx="${i}" data-simple="true" data-f="value" value="${esc(st.value || '')}" placeholder="Enter result..."></td>
                 <td><input class="form-control form-control-sm" data-test-idx="${i}" data-simple="true" data-f="unit" value="${esc(st.unit || '')}" placeholder="Unit"></td>
                 <td><input class="form-control form-control-sm" data-test-idx="${i}" data-simple="true" data-f="range" value="${esc(st.range || '')}" placeholder="Reference Range"></td>
               </tr>
             </tbody>
           </table>
+        </div>
+        <div class="p-2 border-top bg-light-subtle test-remark-box">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small fw-semibold text-secondary">
+              <i class="bi bi-chat-left-dots text-primary me-1"></i>Remark / Interpretation (${esc(t.name)}):
+            </span>
+            ${st.remark ? `<button type="button" class="btn btn-xs btn-outline-danger py-0 px-2" style="font-size:0.72rem;" onclick="clearTestRemark(${i})"><i class="bi bi-x me-1"></i>Clear</button>` : ''}
+          </div>
+          <textarea id="testRemark_${i}" class="form-control form-control-sm form-control-result test-remark-input" data-test-idx="${i}" data-f="remark" rows="2" style="font-size: 0.85rem; resize: vertical;" placeholder="Add remark / interpretation for this test (optional, press Shift+Enter for new line)...">${esc(st.remark || '')}</textarea>
         </div>
       `;
     }
@@ -817,16 +1005,220 @@ if ($('edRows')) {
     if (!inp || !inp.dataset || inp.dataset.testIdx === undefined) return;
     const idx = parseInt(inp.dataset.testIdx, 10);
     if (!editorState[idx]) return;
-    if (inp.dataset.simple === 'true') {
+    if (inp.dataset.f === 'remark') {
+      editorState[idx].remark = inp.value;
+      updateUrinePhraseButtons(idx);
+    } else if (inp.dataset.simple === 'true') {
       editorState[idx][inp.dataset.f] = inp.value;
+      const row = inp.closest('tr');
+      if (row) {
+        const valInp = row.querySelector('[data-f="value"]');
+        const rngInp = row.querySelector('[data-f="range"]');
+        if (valInp && rngInp) {
+          const stt = checkValueRange(valInp.value, rngInp.value);
+          valInp.classList.toggle('is-abnormal-input', stt === 'high' || stt === 'low' || stt === 'abnormal');
+        }
+      }
     } else {
       const p = inp.dataset.param;
       const f = inp.dataset.f;
       editorState[idx].params = editorState[idx].params || {};
       editorState[idx].params[p] = editorState[idx].params[p] || {};
       editorState[idx].params[p][f] = inp.value;
+      const row = inp.closest('tr');
+      if (row) {
+        const valInp = row.querySelector('[data-f="value"]');
+        const rngInp = row.querySelector('[data-f="range"]');
+        if (valInp && rngInp) {
+          const stt = checkValueRange(valInp.value, rngInp.value);
+          valInp.classList.toggle('is-abnormal-input', stt === 'high' || stt === 'low' || stt === 'abnormal');
+        }
+      }
     }
   };
+
+  function getVisibleReportInputs() {
+    const container = $('edRows');
+    if (!container) return [];
+    return Array.from(container.querySelectorAll('input:not([readonly]):not([disabled]), textarea:not([readonly]):not([disabled])'))
+      .filter(inp => inp.offsetParent !== null && !inp.closest('.d-none'));
+  }
+
+  function getVisibleResultInputs() {
+    const container = $('edRows');
+    if (!container) return [];
+    return Array.from(container.querySelectorAll('input.form-control-result:not([readonly]):not([disabled]), textarea.form-control-result:not([readonly]):not([disabled])'))
+      .filter(inp => inp.offsetParent !== null && !inp.closest('.d-none'));
+  }
+
+  function focusAndSelectInput(inp) {
+    if (!inp) return;
+    inp.focus();
+    try {
+      inp.select();
+    } catch (err) {}
+    inp.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  function getCaretPositions(inp) {
+    try {
+      return {
+        start: inp.selectionStart ?? 0,
+        end: inp.selectionEnd ?? 0
+      };
+    } catch (e) {
+      return { start: 0, end: 0 };
+    }
+  }
+
+  function findInputVertical(currentInput, direction) {
+    const resultInputs = getVisibleResultInputs();
+    const isResult = currentInput.classList.contains('form-control-result') || currentInput.dataset.f === 'value' || currentInput.dataset.f === 'remark';
+
+    if (isResult) {
+      const idx = resultInputs.indexOf(currentInput);
+      if (idx !== -1) {
+        if (direction === 'down') {
+          if (idx < resultInputs.length - 1) return resultInputs[idx + 1];
+          return $('edRemarks') || null;
+        } else if (direction === 'up') {
+          if (idx > 0) return resultInputs[idx - 1];
+          return null;
+        }
+      }
+    }
+
+    const currentTr = currentInput.closest('tr');
+    const targetField = currentInput.dataset.f || 'value';
+    const allRows = Array.from($('edRows').querySelectorAll('tr')).filter(tr => tr.offsetParent !== null && !tr.closest('.d-none'));
+    const trIdx = allRows.indexOf(currentTr);
+
+    if (trIdx !== -1) {
+      const step = direction === 'down' ? 1 : -1;
+      let nextTrIdx = trIdx + step;
+      while (nextTrIdx >= 0 && nextTrIdx < allRows.length) {
+        const candidateTr = allRows[nextTrIdx];
+        const matchInput = candidateTr.querySelector(`input[data-f="${targetField}"]:not([readonly]):not([disabled])`);
+        if (matchInput && matchInput.offsetParent !== null) return matchInput;
+        const fallbackInput = candidateTr.querySelector(`input.form-control-result:not([readonly]):not([disabled]), textarea.form-control-result:not([readonly]):not([disabled])`);
+        if (fallbackInput && fallbackInput.offsetParent !== null) return fallbackInput;
+        nextTrIdx += step;
+      }
+    }
+
+    const allInputs = getVisibleReportInputs();
+    const inpIdx = allInputs.indexOf(currentInput);
+    if (inpIdx !== -1) {
+      if (direction === 'down') {
+        if (inpIdx < allInputs.length - 1) return allInputs[inpIdx + 1];
+        return $('edRemarks') || null;
+      }
+      if (direction === 'up' && inpIdx > 0) return allInputs[inpIdx - 1];
+    }
+    return null;
+  }
+
+  function findInputHorizontal(currentInput, direction) {
+    const allInputs = getVisibleReportInputs();
+    const idx = allInputs.indexOf(currentInput);
+    if (idx === -1) return null;
+    if (direction === 'right') {
+      if (idx < allInputs.length - 1) return allInputs[idx + 1];
+    } else if (direction === 'left') {
+      if (idx > 0) return allInputs[idx - 1];
+    }
+    return null;
+  }
+
+  $('edRows').addEventListener('keydown', e => {
+    const target = e.target;
+    if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
+
+    if (e.key === 'Enter') {
+      if (target.tagName === 'TEXTAREA') {
+        if (e.shiftKey || e.ctrlKey || e.altKey) {
+          e.preventDefault();
+          const start = target.selectionStart ?? target.value.length;
+          const end = target.selectionEnd ?? target.value.length;
+          const val = target.value;
+          target.value = val.substring(0, start) + '\n' + val.substring(end);
+          target.selectionStart = target.selectionEnd = start + 1;
+          target.dispatchEvent(new Event('input', { bubbles: true }));
+          return;
+        }
+        e.preventDefault();
+        const next = findInputVertical(target, 'down');
+        if (next) focusAndSelectInput(next);
+        return;
+      }
+      e.preventDefault();
+      if (e.shiftKey) {
+        const prev = findInputVertical(target, 'up');
+        if (prev) focusAndSelectInput(prev);
+      } else {
+        const next = findInputVertical(target, 'down');
+        if (next) focusAndSelectInput(next);
+      }
+    } else if (e.key === 'ArrowDown') {
+      if (target.tagName === 'TEXTAREA') {
+        const { start, end } = getCaretPositions(target);
+        const valLen = (target.value || '').length;
+        const lastLineStart = target.value.lastIndexOf('\n') + 1;
+        const isAtLastLine = start >= lastLineStart;
+        const isAllSelected = start === 0 && end === valLen;
+        if (isAtLastLine || isAllSelected) {
+          e.preventDefault();
+          const next = findInputVertical(target, 'down');
+          if (next) focusAndSelectInput(next);
+        }
+      } else {
+        e.preventDefault();
+        const next = findInputVertical(target, 'down');
+        if (next) focusAndSelectInput(next);
+      }
+    } else if (e.key === 'ArrowUp') {
+      if (target.tagName === 'TEXTAREA') {
+        const { start, end } = getCaretPositions(target);
+        const valLen = (target.value || '').length;
+        const firstLineEnd = target.value.indexOf('\n') === -1 ? valLen : target.value.indexOf('\n');
+        const isAtFirstLine = start <= firstLineEnd;
+        const isAllSelected = start === 0 && end === valLen;
+        if (isAtFirstLine || isAllSelected) {
+          e.preventDefault();
+          const prev = findInputVertical(target, 'up');
+          if (prev) focusAndSelectInput(prev);
+        }
+      } else {
+        e.preventDefault();
+        const prev = findInputVertical(target, 'up');
+        if (prev) focusAndSelectInput(prev);
+      }
+    } else if (e.key === 'ArrowRight') {
+      const { start, end } = getCaretPositions(target);
+      const valLen = (target.value || '').length;
+      const isAtEnd = start === valLen && end === valLen;
+      const isAllSelected = start === 0 && end === valLen;
+      if (isAtEnd || isAllSelected) {
+        const next = findInputHorizontal(target, 'right');
+        if (next) {
+          e.preventDefault();
+          focusAndSelectInput(next);
+        }
+      }
+    } else if (e.key === 'ArrowLeft') {
+      const { start, end } = getCaretPositions(target);
+      const valLen = (target.value || '').length;
+      const isAtStart = start === 0 && end === 0;
+      const isAllSelected = start === 0 && end === valLen;
+      if (isAtStart || isAllSelected) {
+        const prev = findInputHorizontal(target, 'left');
+        if (prev) {
+          e.preventDefault();
+          focusAndSelectInput(prev);
+        }
+      }
+    }
+  });
 }
 
 window.openEditor = l => {
@@ -845,6 +1237,13 @@ window.openEditor = l => {
         editorState[i].isDetailed = true;
         editorState[i].templateId = tmpl.id;
         editorState[i].params = editorState[i].params || {};
+        if (editorState[i].remark === undefined) {
+          editorState[i].remark = prev.remark !== undefined ? prev.remark : (tmpl.remark || '');
+        }
+      } else {
+        if (editorState[i].remark === undefined) {
+          editorState[i].remark = prev.remark || '';
+        }
       }
     } else {
       const tmpl = findTemplate(t.name);
@@ -861,7 +1260,8 @@ window.openEditor = l => {
           isDetailed: false,
           value: '',
           unit: '',
-          range: ''
+          range: '',
+          remark: ''
         };
       }
     }
@@ -876,6 +1276,14 @@ window.openEditor = l => {
   $('edRTime').value = r.reportTime || '10:00';
   $('edRemarks').value = r.remarks || '';
   show('editor');
+
+  setTimeout(() => {
+    const firstResult = $('edRows') ? $('edRows').querySelector('input.form-control-result:not([readonly]):not([disabled])') : null;
+    if (firstResult && firstResult.offsetParent !== null) {
+      firstResult.focus();
+      try { firstResult.select(); } catch (err) {}
+    }
+  }, 100);
 };
 
 function saveEditor(status) {
@@ -891,7 +1299,7 @@ function saveEditor(status) {
         templateId: tmpl.id,
         params: st.params || {},
         method: tmpl.method || '',
-        remark: tmpl.remark || '',
+        remark: st.remark !== undefined ? st.remark.trim() : (tmpl.remark || ''),
         value: 'Detailed Parameters'
       };
     } else {
@@ -899,7 +1307,8 @@ function saveEditor(status) {
         isDetailed: false,
         value: (st.value || '').trim(),
         unit: (st.unit || '').trim(),
-        range: (st.range || '').trim()
+        range: (st.range || '').trim(),
+        remark: (st.remark || '').trim()
       };
     }
   });
