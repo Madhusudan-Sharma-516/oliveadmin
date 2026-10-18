@@ -1,12 +1,11 @@
 /* ==========================================================================
-   Page Module: Authentication & App Shell Navigation
-   Handles login, logout, role-based navigation menus, and mobile sidebar
+   Page Module: Authentication & Desktop Top-Navigation Initialization
+   Handles login, logout, top horizontal ribbon tabs, and user session
    ========================================================================== */
 
 function initAuth() {
   const loginForm = $('loginForm');
   const logoutBtn = $('logoutBtn');
-  const menuBtn = $('menuBtn');
 
   if (loginForm) {
     loginForm.onsubmit = e => {
@@ -37,12 +36,6 @@ function initAuth() {
       location.reload();
     };
   }
-
-  if (menuBtn) {
-    menuBtn.onclick = () => {
-      $('sidebar')?.classList.toggle('open');
-    };
-  }
 }
 
 function startApp() {
@@ -56,18 +49,27 @@ function startApp() {
 
   // Filter accessible menus by role
   const keys = Object.keys(MENUS).filter(k => MENUS[k][2].includes(user?.role));
-  const sideNav = $('sideNav');
-  if (sideNav) {
-    sideNav.innerHTML = keys.map(k => `
-      <a class="nav-link" data-view="${k}" id="nav-${k}">
-        <i class="bi ${MENUS[k][1]}"></i>${MENUS[k][0]}
-        <span class="badge bg-warning text-dark ms-2 d-none" id="badge-${k}"></span>
+  
+  // Render tabs into top horizontal ribbon
+  const topNav = $('topNav') || $('sideNav');
+  if (topNav) {
+    topNav.innerHTML = keys.map((k, idx) => `
+      <a class="nav-link" data-view="${k}" id="nav-${k}" title="Shortcut: Press F${idx + 1} to open">
+        <span class="desktop-fkey-badge">F${idx + 1}</span>
+        <i class="bi ${MENUS[k][1]}"></i>
+        <span>${MENUS[k][0]}</span>
+        <span class="badge bg-warning text-dark ms-1 d-none" id="badge-${k}"></span>
       </a>
     `).join('');
 
-    sideNav.querySelectorAll('a').forEach(a => {
+    topNav.querySelectorAll('a').forEach(a => {
       a.onclick = () => show(a.dataset.view);
     });
+  }
+
+  const sideNav = $('sideNav');
+  if (sideNav && sideNav !== topNav) {
+    sideNav.innerHTML = topNav.innerHTML;
   }
 
   if (keys.length > 0) {

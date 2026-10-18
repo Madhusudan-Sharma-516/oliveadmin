@@ -1,94 +1,206 @@
 /* ==========================================================================
-   Layout Styles (App Shell, Sidebar, Topbar, Responsive)
+   Desktop Software Layout Styles (Top Ribbon, Horizontal Tabs, Full Width)
+   Olive Diagnostic Raigarh
    ========================================================================== */
 
 .app-shell {
   display: flex;
-  min-height: 100vh;
-}
-
-/* Sidebar */
-.sidebar {
-  width: 250px;
-  background: var(--sidebar-bg, #1f2d3d);
-  color: #fff;
-  display: flex;
   flex-direction: column;
-  position: fixed;
-  inset: 0 auto 0 0;
-  z-index: 1030;
-  transition: transform .25s ease-in-out;
+  min-height: 100vh;
+  background: var(--body-bg, #eef2f6);
 }
 
-.sidebar-brand {
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-  padding: 1rem;
-  font-weight: 700;
-  line-height: 1.15;
-  border-bottom: 1px solid rgba(255, 255, 255, .1);
-}
-
-.sidebar-brand img {
-  background: none;
-  padding: 0;
-}
-
-.sidebar-brand small {
-  color: #7fd6cc;
-  font-weight: 500;
-}
-
-.sidebar .nav-link {
-  color: #c3cfdc;
-  padding: .75rem 1.25rem;
-  border-left: 4px solid transparent;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-
-.sidebar .nav-link:hover {
-  background: rgba(255, 255, 255, .06);
-  color: #fff;
-}
-
-.sidebar .nav-link.active {
-  background: rgba(15, 139, 126, .25);
-  color: #fff;
-  border-left-color: #2fd0bd;
-}
-
-.sidebar .nav-link i {
-  margin-right: .6rem;
-  font-size: 1.1rem;
-}
-
-.sidebar-foot {
-  margin-top: auto;
-  padding: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, .1);
-}
-
-/* Content Area */
-.content {
-  margin-left: 250px;
-  flex: 1;
-  min-width: 0;
-}
-
-/* Topbar */
-.topbar {
-  background: #fff;
-  padding: .8rem 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: .75rem;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, .08);
+/* --------------------------------------------------------------------------
+   1. Pinned Top Unit (Header + Tabs locked together at the top when scrolling)
+   -------------------------------------------------------------------------- */
+.desktop-top-fixed-bar {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 1040;
+  width: 100%;
+  background: #0f1c2b;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+}
+
+/* Desktop Title Bar */
+.desktop-header {
+  background: #0f1c2b;
+  color: #fff;
+  padding: 0.5rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.desktop-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.desktop-logo-box {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 3px 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.desktop-logo-box img {
+  height: 28px;
+  max-width: 110px;
+  object-fit: contain;
+}
+
+.desktop-brand-title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.desktop-brand-title h1 {
+  font-size: 1.05rem;
+  letter-spacing: 0.3px;
+}
+
+.desktop-subtitle {
+  font-size: 0.7rem;
+  color: #5eead4;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.desktop-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.desktop-clock {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.82rem;
+  color: #94a3b8;
+  font-family: 'Consolas', monospace;
+}
+
+.desktop-user-badge {
+  background: rgba(15, 139, 126, 0.2);
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.84rem;
+  color: #e2e8f0;
+  border: 1px solid rgba(15, 139, 126, 0.4);
+  display: inline-flex;
+  align-items: center;
+}
+
+.desktop-logout-btn {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+/* --------------------------------------------------------------------------
+   2. Desktop Horizontal Tabs Ribbon (No Bounce, No Glow, Clean Solid Highlight)
+   -------------------------------------------------------------------------- */
+.desktop-nav-ribbon {
+  background: #162436;
+  border-bottom: 2px solid var(--olive, #0f8b7e);
+  padding: 0 1rem;
+}
+
+.desktop-tabs-container {
+  display: flex;
+  gap: 0.3rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-top: 0.4rem;
+}
+
+.desktop-tabs-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.desktop-tabs-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+}
+
+/* Individual Tab Button - Flat, Sharp, No Animation Bounces */
+.desktop-tabs-container .nav-link,
+.desktop-tab-item {
+  color: #cbd5e1;
+  padding: 0.5rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: 5px 5px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: none;
+  background: #1f3044;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  text-decoration: none;
+  user-select: none;
+  /* Crisp instant hover with no bounce */
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.desktop-tabs-container .nav-link:hover {
+  background: #2a415c;
+  color: #ffffff;
+}
+
+/* Active Tab: Pure Solid Highlight with NO Glow and NO Box-Shadow */
+.desktop-tabs-container .nav-link.active {
+  background: var(--olive, #0f8b7e) !important;
+  color: #ffffff !important;
+  border-color: var(--olive, #0f8b7e) !important;
+  box-shadow: none !important;
+  font-weight: 700;
+}
+
+/* F-Key Shortcut Badge (F1, F2, F3...) */
+.desktop-fkey-badge {
+  background: #0b131e;
+  color: #facc15;
+  font-family: 'Consolas', monospace;
+  font-weight: 800;
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  line-height: 1.25;
+  letter-spacing: 0.5px;
+}
+
+.desktop-tabs-container .nav-link.active .desktop-fkey-badge {
+  background: #ffffff;
+  color: #0b6f65;
+  border-color: #ffffff;
+  box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   3. Content Area (Full Screen Width)
+   -------------------------------------------------------------------------- */
+.content {
+  margin-left: 0 !important;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.page-header-strip {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 /* SPA Views */
@@ -100,21 +212,20 @@
   display: block;
 }
 
-/* Responsive */
-@media (max-width: 991px) {
-  .table {
-    font-size: .9rem;
+/* Hide legacy sidebar elements */
+.sidebar, #menuBtn {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .desktop-header {
+    padding: 0.45rem 0.75rem;
   }
-  .btn-lg {
-    padding: .8rem 1rem;
+  .desktop-brand-title h1 {
+    font-size: 0.92rem;
   }
-  .sidebar {
-    transform: translateX(-100%);
-  }
-  .sidebar.open {
-    transform: none;
-  }
-  .content {
-    margin-left: 0;
+  .desktop-tabs-container .nav-link {
+    padding: 0.42rem 0.75rem;
+    font-size: 0.82rem;
   }
 }

@@ -465,7 +465,7 @@ function findInputVertical(currentInput, direction) {
     if (idx !== -1) {
       if (direction === 'down') {
         if (idx < resultInputs.length - 1) return resultInputs[idx + 1];
-        return $('edRemarks') || null;
+        return $('edAdvance') || $('edDoctor') || $('edRemarks') || null;
       } else if (direction === 'up') {
         if (idx > 0) return resultInputs[idx - 1];
         return null;
@@ -496,7 +496,7 @@ function findInputVertical(currentInput, direction) {
   if (inpIdx !== -1) {
     if (direction === 'down') {
       if (inpIdx < allInputs.length - 1) return allInputs[inpIdx + 1];
-      return $('edRemarks') || null;
+      return $('edAdvance') || $('edDoctor') || $('edRemarks') || null;
     }
     if (direction === 'up' && inpIdx > 0) return allInputs[inpIdx - 1];
   }
