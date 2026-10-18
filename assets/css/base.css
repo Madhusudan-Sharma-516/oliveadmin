@@ -1,0 +1,62 @@
+/* ==========================================================================
+   Base Styles & Variables
+   Olive Diagnostic Raigarh
+   ========================================================================== */
+
+:root {
+  --olive: #0f8b7e;
+  --olive-dark: #0b6f65;
+  --olive-light: #e0f5f1;
+  --slate: #64799a;
+  --leaf: #6aa83a;
+  --body-bg: #eef2f6;
+  --sidebar-bg: #1f2d3d;
+}
+
+body {
+  background: var(--body-bg);
+  font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  color: #1e293b;
+}
+
+.brand-text {
+  color: var(--olive);
+}
+
+.btn-primary {
+  background: var(--olive);
+  border-color: var(--olive);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: var(--olive-dark);
+  border-color: var(--olive-dark);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.card-header {
+  background: #fff;
+  color: var(--olive);
+  font-weight: 600;
+  border-bottom: 2px solid #dff1ee;
+}
+
+.table thead th {
+  background: #e9f5f3;
+  color: #0b6f65;
+  border: 0;
+  white-space: nowrap;
+}
+
+/* Subtle Hover Transitions */
+.hover-test-item {
+  transition: background 0.15s ease;
+}
+
+.hover-test-item:hover {
+  background: #f0f7f5;
+}

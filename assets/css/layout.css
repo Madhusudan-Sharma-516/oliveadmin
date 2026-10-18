@@ -1,0 +1,120 @@
+/* ==========================================================================
+   Layout Styles (App Shell, Sidebar, Topbar, Responsive)
+   ========================================================================== */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background: var(--sidebar-bg, #1f2d3d);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 1030;
+  transition: transform .25s ease-in-out;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: 1rem;
+  font-weight: 700;
+  line-height: 1.15;
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
+}
+
+.sidebar-brand img {
+  background: none;
+  padding: 0;
+}
+
+.sidebar-brand small {
+  color: #7fd6cc;
+  font-weight: 500;
+}
+
+.sidebar .nav-link {
+  color: #c3cfdc;
+  padding: .75rem 1.25rem;
+  border-left: 4px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar .nav-link:hover {
+  background: rgba(255, 255, 255, .06);
+  color: #fff;
+}
+
+.sidebar .nav-link.active {
+  background: rgba(15, 139, 126, .25);
+  color: #fff;
+  border-left-color: #2fd0bd;
+}
+
+.sidebar .nav-link i {
+  margin-right: .6rem;
+  font-size: 1.1rem;
+}
+
+.sidebar-foot {
+  margin-top: auto;
+  padding: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, .1);
+}
+
+/* Content Area */
+.content {
+  margin-left: 250px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Topbar */
+.topbar {
+  background: #fff;
+  padding: .8rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .08);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* SPA Views */
+.view {
+  display: none;
+}
+
+.view.show {
+  display: block;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+  .table {
+    font-size: .9rem;
+  }
+  .btn-lg {
+    padding: .8rem 1rem;
+  }
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.open {
+    transform: none;
+  }
+  .content {
+    margin-left: 0;
+  }
+}

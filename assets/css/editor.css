@@ -1,0 +1,168 @@
+/* ==========================================================================
+   Report Editor & Test Selection Styles
+   ========================================================================== */
+
+/* Test Checkbox Grid (Registration Page) */
+.test-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: .4rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: .5rem;
+  border: 1px solid #dee2e6;
+  border-radius: .5rem;
+  background: #fafcfc;
+}
+
+.test-grid label {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .6rem;
+  border: 1px solid #e3e8ee;
+  border-radius: .4rem;
+  background: #fff;
+  cursor: pointer;
+  font-size: .92rem;
+}
+
+.test-grid label:has(input:checked) {
+  background: var(--olive-light, #e0f5f1);
+  border-color: var(--olive, #0f8b7e);
+  font-weight: 600;
+}
+
+.test-grid input {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+/* Detailed Report Editor Styles */
+.test-card {
+  border: 1px solid #d8e5e3;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.test-card-header {
+  background: #f4faf9;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #d8e5e3;
+}
+
+.param-table {
+  margin-bottom: 0;
+  font-size: 0.92rem;
+}
+
+.param-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 6px 10px;
+}
+
+.param-cat-row {
+  background: #edf2f7;
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.param-cat-row td {
+  padding: 5px 12px !important;
+}
+
+.param-indent {
+  padding-left: 1.75rem !important;
+}
+
+.form-control-result {
+  font-weight: 600;
+  color: #0f172a;
+  border-color: #94d3cb;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.form-control-result:focus {
+  border-color: var(--olive, #0f8b7e);
+  box-shadow: 0 0 0 0.2rem rgba(15, 139, 126, 0.25);
+  background: #f0fdf9;
+}
+
+.test-card table tbody tr:has(input:focus) {
+  background-color: #f2fbf9 !important;
+}
+
+.test-card table tbody tr:has(input:focus) td:first-child {
+  color: var(--olive, #0f8b7e);
+  font-weight: 700;
+}
+
+.expand-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s ease;
+}
+
+.expand-btn:hover {
+  background: #dce7e5;
+}
+
+.test-card-header.cursor-pointer:hover {
+  background: #eaf4f2;
+}
+
+.kbd-hint {
+  font-size: 0.76rem;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+
+.urine-remark-box,
+.test-remark-box {
+  background: #fcfefe;
+  border-top: 1px solid #d8e5e3;
+}
+
+.urine-remark-box textarea,
+.test-remark-box textarea {
+  border-color: #a3d9d2;
+}
+
+.urine-remark-box textarea:focus,
+.test-remark-box textarea:focus {
+  border-color: var(--olive, #0f8b7e);
+  box-shadow: 0 0 0 0.2rem rgba(15, 139, 126, 0.25);
+  background: #f0fdf9;
+}
+
+.ready-phrase-btn {
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+
+.ready-phrase-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Abnormal Input Highlighting */
+.is-abnormal-input {
+  color: #b91c1c !important;
+  font-weight: 800 !important;
+  border-color: #fca5a5 !important;
+  background-color: #fff1f2 !important;
+}

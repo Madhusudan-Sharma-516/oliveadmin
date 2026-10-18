@@ -1,0 +1,55 @@
+/* ==========================================================================
+   Login Screen & Branding Styles
+   ========================================================================== */
+
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f8b7e 0%, #64799a 100%);
+  padding: 1rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  border: 0;
+  border-radius: 1rem;
+}
+
+.login-logo {
+  max-width: 240px;
+  width: 100%;
+}
+
+.logo-box {
+  background: #fff;
+  border-radius: 10px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-box img {
+  height: 34px;
+  max-width: 120px;
+  object-fit: contain;
+}
+
+.logo-box .login-logo {
+  height: auto;
+  max-width: 240px;
+  width: 100%;
+}
+
+.logo-box-wide {
+  width: 100%;
+}
+
+.logo-box-wide img {
+  height: auto;
+  max-height: 56px;
+  max-width: 100%;
+}
