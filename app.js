@@ -96,7 +96,7 @@ const TEST_TEMPLATES = {
     title: 'LIPID PROFILE',
     subtitle: 'Lipid Profile Panel',
     method: '',
-    match: ['lipid'],
+    match: ['lipid', 'li pid', 'lipid profile'],
     items: [
       { name: 'CHOLESTEROL', unit: 'mg/dl.', range: 'Upto 200' },
       { name: 'TRIGLYCERIDES', unit: 'mg/dl.', range: '35 - 135' },
@@ -576,36 +576,29 @@ function downloadReportPdf(r) {
   `;
   document.body.appendChild(overlay);
 
-  // Render container at top: 0, left: 0
+  // Render container
   const container = document.createElement('div');
   container.id = 'pdfRenderWrap';
   container.className = 'pdf-render-wrap';
+  container.style.position = 'static';
   container.innerHTML = html;
   document.body.appendChild(container);
 
-  const prevScrollY = window.scrollY;
-  const prevScrollX = window.scrollX;
-  window.scrollTo(0, 0);
-
   const opt = {
-    margin: [0, 0, 0, 0],
+    margin: 0,
     filename: `Report_${r.labNo}_${(r.name || 'Patient').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: {
       scale: 2,
       useCORS: true,
-      scrollY: 0,
-      scrollX: 0,
-      windowWidth: 794
+      letterRendering: true
     },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['css', 'legacy'] }
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
   const cleanup = () => {
     if (container.parentNode) container.parentNode.removeChild(container);
     if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    window.scrollTo(prevScrollX, prevScrollY);
   };
 
   if (window.html2pdf) {
@@ -644,7 +637,24 @@ function renderSaved() {
 $('receiptSearch').oninput = renderSaved;
 window.printRcpt = l => printReceipt(find(l));
 window.printRep = l => printReport(find(l));
-window.delRcpt = l => { if (confirm('Delete receipt ' + l + '?')) { receipts = receipts.filter(r => r.labNo !== l); persist(); renderSaved(); updateBadge(); } };
+window.delReport = l => {
+  const r = find(l);
+  const patientName = r?.name ? ` for "${r.name}"` : '';
+  if (!confirm(`Delete report ${l}${patientName}? This action cannot be undone.`)) return;
+  receipts = receipts.filter(item => item.labNo !== l);
+  persist();
+  renderPending();
+  renderDone();
+  renderSaved();
+  if (typeof renderRecent === 'function') renderRecent();
+  updateBadge();
+  toast(`Report ${l} deleted`);
+  if (editing === l) {
+    editing = null;
+    show(user?.role === 'technician' ? 'pending' : 'saved');
+  }
+};
+window.delRcpt = window.delReport;
 window.openRcpt = l => {
   const r = find(l);
   ['labNo', 'date', 'name', 'age', 'gender', 'advance', 'doctor', 'reportTime', 'reportDate'].forEach(k => { if ($(k)) $(k).value = r[k] || ''; });
@@ -681,16 +691,22 @@ function renderPending() {
   $('pendingTable').innerHTML = list.length ? list.map(r => `<tr><td>${esc(r.labNo)}</td><td>${fmtDate(r.date)}</td><td>${esc(r.name)}</td>
     <td>${esc(r.age)} / ${esc(r.gender)}</td><td>${r.tests.map(t => `<span class="badge text-bg-light border me-1">${esc(t.name)}</span>`).join('')}</td>
     <td class="text-nowrap">${fmtDate(r.reportDate)} ${fmtTime(r.reportTime)}</td>
-    <td class="text-end"><button class="btn btn-sm btn-primary" onclick="openEditor('${esc(r.labNo)}')"><i class="bi bi-pencil-square me-1"></i>Make Report</button></td></tr>`).join('')
+    <td class="text-end text-nowrap">
+      <button class="btn btn-sm btn-primary me-1" onclick="openEditor('${esc(r.labNo)}')"><i class="bi bi-pencil-square me-1"></i>Make Report</button>
+      <button class="btn btn-sm btn-outline-danger" title="Delete Report" onclick="delReport('${esc(r.labNo)}')"><i class="bi bi-trash"></i></button>
+    </td></tr>`).join('')
     : '<tr><td colspan="7" class="text-center text-muted py-4">No pending reports 🎉</td></tr>';
 }
 function renderDone() {
   const list = receipts.filter(r => r.status === 'done').slice().reverse();
   $('doneTable').innerHTML = list.length ? list.map(r => `<tr><td>${esc(r.labNo)}</td><td>${esc(r.name)}</td>
     <td>${r.tests.map(t => esc(t.name)).join(', ')}</td><td>${esc(r.reportedBy)}</td>
-    <td class="text-end text-nowrap"><button class="btn btn-sm btn-outline-primary me-1" title="Edit" onclick="openEditor('${esc(r.labNo)}')"><i class="bi bi-pencil"></i></button>
-    <button class="btn btn-sm btn-danger me-1" title="Download PDF" onclick="downloadPdfRep('${esc(r.labNo)}')"><i class="bi bi-file-earmark-pdf"></i></button>
-    <button class="btn btn-sm btn-warning" title="Print" onclick="printRep('${esc(r.labNo)}')"><i class="bi bi-printer"></i></button></td></tr>`).join('')
+    <td class="text-end text-nowrap">
+      <button class="btn btn-sm btn-outline-primary me-1" title="Edit" onclick="openEditor('${esc(r.labNo)}')"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-sm btn-danger me-1" title="Download PDF" onclick="downloadPdfRep('${esc(r.labNo)}')"><i class="bi bi-file-earmark-pdf"></i></button>
+      <button class="btn btn-sm btn-warning me-1" title="Print" onclick="printRep('${esc(r.labNo)}')"><i class="bi bi-printer"></i></button>
+      <button class="btn btn-sm btn-outline-danger" title="Delete Report" onclick="delReport('${esc(r.labNo)}')"><i class="bi bi-trash"></i></button>
+    </td></tr>`).join('')
     : '<tr><td colspan="5" class="text-center text-muted py-4">No completed reports</td></tr>';
 }
 let editorState = {};
@@ -850,6 +866,105 @@ window.clearTestRemark = idx => {
   if (textarea) textarea.value = '';
 };
 
+window.calculateLipidProfile = idx => {
+  const st = editorState[idx];
+  if (!st) return;
+  const tmpl = TEST_TEMPLATES[st.templateId] || findTemplate((find(editing)?.tests?.[idx] || {}).name);
+  if (!tmpl || tmpl.id !== 'lipid') return;
+
+  st.params = st.params || {};
+  const cholStr = (st.params['CHOLESTEROL']?.value ?? '').toString().trim();
+  const tgStr = (st.params['TRIGLYCERIDES']?.value ?? '').toString().trim();
+  const hdlStr = (st.params['HDL']?.value ?? '').toString().trim();
+
+  const chol = parseFloat(cholStr);
+  const tg = parseFloat(tgStr);
+  const hdl = parseFloat(hdlStr);
+
+  const cardBody = $('testCardBody_' + idx);
+  if (!cardBody) return;
+
+  const updateField = (paramName, val) => {
+    st.params[paramName] = st.params[paramName] || {};
+    st.params[paramName].value = val;
+    const inp = cardBody.querySelector(`input[data-param="${paramName}"][data-f="value"]`);
+    if (inp) {
+      inp.value = val;
+      const row = inp.closest('tr');
+      const rngInp = row?.querySelector('[data-f="range"]');
+      if (rngInp) {
+        const stt = checkValueRange(inp.value, rngInp.value);
+        inp.classList.toggle('is-abnormal-input', stt === 'high' || stt === 'low' || stt === 'abnormal');
+      }
+    }
+  };
+
+  // 1. VLDL = Triglycerides / 5
+  if (!isNaN(tg) && tg > 0) {
+    updateField('VLDL', (tg / 5).toFixed(2));
+  } else if (tgStr === '') {
+    updateField('VLDL', '');
+  }
+
+  // 2. LDL = Cholesterol - (HDL || 0) - (Triglycerides / 5) [Friedewald Equation]
+  if (!isNaN(chol) && chol > 0 && !isNaN(tg) && tg > 0) {
+    const hdlNum = !isNaN(hdl) && hdl > 0 ? hdl : 0;
+    const ldlNum = Math.max(0, chol - hdlNum - (tg / 5));
+    updateField('LDL', ldlNum.toFixed(2));
+  } else if (cholStr === '' && tgStr === '') {
+    updateField('LDL', '');
+  }
+
+  // 3. Total Chol. : HDL Ratio = Cholesterol / HDL
+  if (!isNaN(chol) && chol > 0 && !isNaN(hdl) && hdl > 0) {
+    updateField('Total Chol. : HDL Ratio', (chol / hdl).toFixed(2));
+  } else if (isNaN(hdl) || hdl <= 0) {
+    updateField('Total Chol. : HDL Ratio', '');
+  }
+};
+
+window.calculateBiochemistry = idx => {
+  const st = editorState[idx];
+  if (!st) return;
+  const tmpl = TEST_TEMPLATES[st.templateId] || findTemplate((find(editing)?.tests?.[idx] || {}).name);
+  if (!tmpl || tmpl.id !== 'biochemistry') return;
+
+  st.params = st.params || {};
+  const cardBody = $('testCardBody_' + idx);
+  if (!cardBody) return;
+
+  const updateField = (paramName, val) => {
+    st.params[paramName] = st.params[paramName] || {};
+    st.params[paramName].value = val;
+    const inp = cardBody.querySelector(`input[data-param="${paramName}"][data-f="value"]`);
+    if (inp) {
+      inp.value = val;
+      const row = inp.closest('tr');
+      const rngInp = row?.querySelector('[data-f="range"]');
+      if (rngInp) {
+        const stt = checkValueRange(inp.value, rngInp.value);
+        inp.classList.toggle('is-abnormal-input', stt === 'high' || stt === 'low' || stt === 'abnormal');
+      }
+    }
+  };
+
+  const totBil = parseFloat(st.params['TOTAL']?.value);
+  const dirBil = parseFloat(st.params['DIRECT']?.value);
+  if (!isNaN(totBil) && !isNaN(dirBil)) {
+    updateField('INDIRECT', Math.max(0, totBil - dirBil).toFixed(2));
+  }
+
+  const totProt = parseFloat(st.params['TOTAL PROTEIN']?.value);
+  const alb = parseFloat(st.params['ALBUMIN']?.value);
+  if (!isNaN(totProt) && !isNaN(alb)) {
+    const glob = Math.max(0, totProt - alb);
+    updateField('GLOBULIN', glob.toFixed(2));
+    if (glob > 0) {
+      updateField('A/G RATIO', (alb / glob).toFixed(2));
+    }
+  }
+};
+
 function renderEditorRows() {
   const r = find(editing);
   if (!r) return;
@@ -928,7 +1043,21 @@ function renderEditorRows() {
                 </button>`;
               }).join('')}
             </div>
-          </div>` : `
+          </div>` : tmpl.id === 'lipid' ? `
+          <div class="p-2 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="small text-muted"><i class="bi bi-calculator text-primary me-1"></i><b>Auto-Calculate:</b> VLDL = TG/5 &middot; LDL = Chol &minus; HDL &minus; VLDL &middot; Ratio = Chol/HDL</span>
+            <button type="button" class="btn btn-xs btn-outline-primary py-1 px-2" style="font-size:0.75rem;" onclick="calculateLipidProfile(${i})"><i class="bi bi-arrow-repeat me-1"></i>Recalculate</button>
+          </div>
+          <div class="p-2 border-top bg-light-subtle test-remark-box">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="small fw-semibold text-secondary">
+                <i class="bi bi-chat-left-dots text-primary me-1"></i>Remark / Interpretation (${esc(tmpl.title || t.name)}):
+              </span>
+              ${st.remark ? `<button type="button" class="btn btn-xs btn-outline-danger py-0 px-2" style="font-size:0.72rem;" onclick="clearTestRemark(${i})"><i class="bi bi-x me-1"></i>Clear</button>` : ''}
+            </div>
+            <textarea id="testRemark_${i}" class="form-control form-control-sm form-control-result test-remark-input" data-test-idx="${i}" data-f="remark" rows="2" style="font-size: 0.85rem; resize: vertical;" placeholder="Add remark / interpretation for this test (optional, press Shift+Enter for new line)...">${esc(st.remark || '')}</textarea>
+          </div>
+        ` : `
           <div class="p-2 border-top bg-light-subtle test-remark-box">
             <div class="d-flex justify-content-between align-items-center mb-1">
               <span class="small fw-semibold text-secondary">
@@ -1032,6 +1161,19 @@ if ($('edRows')) {
         if (valInp && rngInp) {
           const stt = checkValueRange(valInp.value, rngInp.value);
           valInp.classList.toggle('is-abnormal-input', stt === 'high' || stt === 'low' || stt === 'abnormal');
+        }
+      }
+
+      if (f === 'value') {
+        const tmpl = TEST_TEMPLATES[editorState[idx].templateId] || findTemplate((find(editing)?.tests?.[idx] || {}).name);
+        if (tmpl && tmpl.id === 'lipid') {
+          if (p === 'CHOLESTEROL' || p === 'TRIGLYCERIDES' || p === 'HDL') {
+            calculateLipidProfile(idx);
+          }
+        } else if (tmpl && tmpl.id === 'biochemistry') {
+          if (p === 'TOTAL' || p === 'DIRECT' || p === 'TOTAL PROTEIN' || p === 'ALBUMIN') {
+            calculateBiochemistry(idx);
+          }
         }
       }
     }
@@ -1269,6 +1411,11 @@ window.openEditor = l => {
   });
 
   renderEditorRows();
+  (r.tests || []).forEach((t, i) => {
+    const tmpl = TEST_TEMPLATES[editorState[i]?.templateId] || findTemplate(t.name);
+    if (tmpl?.id === 'lipid') calculateLipidProfile(i);
+    else if (tmpl?.id === 'biochemistry') calculateBiochemistry(i);
+  });
   $('edTotal').value = r.total;
   $('edAdvance').value = r.advance || 0;
   $('edDoctor').value = r.doctor || '';
@@ -1328,6 +1475,7 @@ $('edPrintRcpt').onclick = () => printReceipt(saveEditor());
 $('edDraft').onclick = () => { saveEditor(); toast('Draft saved'); };
 if ($('edPdf')) $('edPdf').onclick = () => downloadReportPdf(saveEditor());
 $('edPrint').onclick = () => printReport(saveEditor());
+if ($('edDelete')) $('edDelete').onclick = () => { if (editing) delReport(editing); };
 $('edBack').onclick = () => show('pending');
 
 /* ---------- RECEPTIONIST ---------- */
