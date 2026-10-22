@@ -21,10 +21,7 @@ function show(v) {
     pageTitleEl.textContent = v === 'editor' ? 'Prepare Report' : (MENUS[v] ? MENUS[v][0] : 'Olive Diagnostics');
   }
 
-  const currentViewBadge = $('currentViewBadge');
-  if (currentViewBadge) {
-    currentViewBadge.textContent = v === 'editor' ? 'EDITOR' : (MENUS[v] ? MENUS[v][0].toUpperCase() : 'ACTIVE');
-  }
+
 
   // Trigger page-specific data rendering
   if (v === 'pending' && typeof renderPending === 'function') renderPending();

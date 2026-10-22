@@ -55,8 +55,6 @@ function startApp() {
   if (topNav) {
     topNav.innerHTML = keys.map((k, idx) => `
       <a class="nav-link" data-view="${k}" id="nav-${k}" title="Shortcut: Press F${idx + 1} to open">
-        <span class="desktop-fkey-badge">F${idx + 1}</span>
-        <i class="bi ${MENUS[k][1]}"></i>
         <span>${MENUS[k][0]}</span>
         <span class="badge bg-warning text-dark ms-1 d-none" id="badge-${k}"></span>
       </a>

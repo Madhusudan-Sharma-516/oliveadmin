@@ -107,85 +107,68 @@
 }
 
 /* --------------------------------------------------------------------------
-   2. Desktop Horizontal Tabs Ribbon (No Bounce, No Glow, Clean Solid Highlight)
+   2. Desktop Horizontal Tabs Ribbon (Plain, Seamless, Zero Gap, Solid Highlight)
    -------------------------------------------------------------------------- */
 .desktop-nav-ribbon {
   background: #162436;
   border-bottom: 2px solid var(--olive, #0f8b7e);
-  padding: 0 1rem;
+  padding: 0 0.75rem;
 }
 
 .desktop-tabs-container {
   display: flex;
-  gap: 0.3rem;
+  gap: 0;
   overflow-x: auto;
   white-space: nowrap;
-  padding-top: 0.4rem;
+  padding: 0;
 }
 
 .desktop-tabs-container::-webkit-scrollbar {
-  height: 4px;
+  height: 3px;
 }
 
 .desktop-tabs-container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
 }
 
-/* Individual Tab Button - Flat, Sharp, No Animation Bounces */
+/* Individual Tab Item - Plain Flat Seamless Strip, No Gaps */
 .desktop-tabs-container .nav-link,
 .desktop-tab-item {
   color: #cbd5e1;
-  padding: 0.5rem 1rem;
+  padding: 0.65rem 1.25rem;
   font-size: 0.88rem;
   font-weight: 600;
-  border-radius: 5px 5px 0 0;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: none;
-  background: #1f3044;
+  border-radius: 0;
+  border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  justify-content: center;
+  gap: 0.5rem;
   cursor: pointer;
   text-decoration: none;
   user-select: none;
-  /* Crisp instant hover with no bounce */
-  transition: background 0.1s ease, color 0.1s ease;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.desktop-tabs-container .nav-link:first-child {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .desktop-tabs-container .nav-link:hover {
-  background: #2a415c;
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
 }
 
-/* Active Tab: Pure Solid Highlight with NO Glow and NO Box-Shadow */
+/* Active Tab: Solid Vibrant Highlight */
 .desktop-tabs-container .nav-link.active {
   background: var(--olive, #0f8b7e) !important;
   color: #ffffff !important;
-  border-color: var(--olive, #0f8b7e) !important;
+  border-right-color: var(--olive, #0f8b7e) !important;
   box-shadow: none !important;
   font-weight: 700;
-}
-
-/* F-Key Shortcut Badge (F1, F2, F3...) */
-.desktop-fkey-badge {
-  background: #0b131e;
-  color: #facc15;
-  font-family: 'Consolas', monospace;
-  font-weight: 800;
-  font-size: 0.72rem;
-  padding: 1px 6px;
-  border-radius: 3px;
-  border: 1px solid rgba(250, 204, 21, 0.35);
-  line-height: 1.25;
-  letter-spacing: 0.5px;
-}
-
-.desktop-tabs-container .nav-link.active .desktop-fkey-badge {
-  background: #ffffff;
-  color: #0b6f65;
-  border-color: #ffffff;
-  box-shadow: none;
 }
 
 /* --------------------------------------------------------------------------
