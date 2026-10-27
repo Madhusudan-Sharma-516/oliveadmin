@@ -1,62 +1,367 @@
 /* ==========================================================================
-   Base Styles & Variables
+   Base Styles & Variables — Windows 7 Medical Theme
    Olive Diagnostic Raigarh
    ========================================================================== */
 
 :root {
-  --olive: #0f8b7e;
-  --olive-dark: #0b6f65;
-  --olive-light: #e0f5f1;
-  --slate: #64799a;
-  --leaf: #6aa83a;
-  --body-bg: #eef2f6;
-  --sidebar-bg: #1f2d3d;
+  /* Olive Green Color Hierarchy */
+  --olive: #128577;
+  --olive-dark: #0b5e54;
+  --olive-darker: #07433c;
+  --olive-light: #d8eee4;
+  --olive-tint: #f2f8f5;
+  --slate: #547169;
+  --leaf: #529633;
+
+  /* App Background: Gentle Light Green */
+  --body-bg: #deede4;
+  --sidebar-bg: #102632;
+
+  /* Bootstrap 5 Theme Token Overrides (eliminating harsh pure-white) */
+  --bs-body-bg: #deede4;
+  --bs-body-color: #16362e;
+  --bs-card-bg: #f2f8f5;
+  --bs-border-color: #9dc3b6;
+  --bs-tertiary-bg: #e6f2eb;
+  --bs-secondary-bg: #eaf4ee;
+
+  /* Windows 7 Aero Gradients & Bevels */
+  --win7-header-grad: linear-gradient(180deg, #246a5e 0%, #175349 50%, #11443b 51%, #154c42 100%);
+  --win7-col-grad: linear-gradient(180deg, #2b7467 0%, #1d5b50 50%, #14493f 51%, #1a5347 100%);
+  --win7-col-hover: linear-gradient(180deg, #388a7c 0%, #256d60 50%, #1b584d 51%, #226356 100%);
+  --win7-btn-grad: linear-gradient(180deg, #2fa797 0%, #1a8b7c 50%, #11786a 51%, #168375 100%);
+  --win7-card-border: #9dc3b6;
+  --win7-header-border: #0d3830;
 }
 
 body {
   background: var(--body-bg);
+  background-image: linear-gradient(180deg, #e4efe7 0%, #d8ebd0 100%);
+  background-attachment: fixed;
   font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-  color: #1e293b;
+  color: #16362e;
 }
 
 .brand-text {
   color: var(--olive);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* --------------------------------------------------------------------------
+   Cards & Panels (Windows 7 Aero Box with Soft Mint Tint, No Harsh White)
+   -------------------------------------------------------------------------- */
+.card {
+  background-color: #f2f8f5;
+  border: 1px solid var(--win7-card-border);
+  border-radius: 5px;
+  box-shadow: 0 2px 6px rgba(12, 50, 40, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.card-body {
+  background-color: transparent;
+}
+
+/* Card Header — Windows 7 Dark Green Glossy Title Bar */
+.card-header {
+  background: var(--win7-header-grad) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid var(--win7-header-border) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  border-top-left-radius: 4px !important;
+  border-top-right-radius: 4px !important;
+  padding: 0.55rem 1rem;
+}
+
+.card-header i {
+  color: #72f3c4;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
+}
+
+/* --------------------------------------------------------------------------
+   Tables & Column Headers (Windows 7 ListView / Grid Aero Dark Green)
+   -------------------------------------------------------------------------- */
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: #14362e;
+  border-color: #bcd9ce;
+  margin-bottom: 0;
+}
+
+.table thead th {
+  background: var(--win7-col-grad) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 0.84rem;
+  letter-spacing: 0.35px;
+  border: 0 !important;
+  border-right: 1px solid #0d3830 !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-bottom: 1px solid #0c332b !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+  padding: 8px 12px;
+  white-space: nowrap;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.table thead th:first-child {
+  border-left: 0 !important;
+}
+
+.table thead th:last-child {
+  border-right: 0 !important;
+}
+
+.table thead th:hover {
+  background: var(--win7-col-hover) !important;
+}
+
+.table tbody tr {
+  background-color: #f5faf7;
+  transition: background-color 0.1s ease;
+}
+
+.table tbody tr:nth-of-type(even) {
+  background-color: #edf5f0;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #dbefe4 !important;
+}
+
+.table td {
+  border-color: #c6ded5;
+  color: #14362e;
+  padding: 8px 12px;
+  vertical-align: middle;
+}
+
+/* --------------------------------------------------------------------------
+   Form Controls (Sleek Windows 7 Aero Inputs — No Complete White)
+   -------------------------------------------------------------------------- */
+.form-control,
+.form-select {
+  background-color: #f7fbf9;
+  color: #14362e;
+  border: 1px solid #9bc2b5;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+  font-size: 0.92rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  background-color: #fcfffd;
+  color: #0b2b23;
+  border-color: #138576;
+  box-shadow: 0 0 0 3px rgba(19, 133, 118, 0.25), inset 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+.form-control[readonly],
+.form-control:disabled,
+.form-select:disabled {
+  background-color: #e6f1eb !important;
+  border-color: #b3d5c9;
+  color: #4b6f65;
+}
+
+.form-label {
+  color: #143e34;
+  font-weight: 600;
+  font-size: 0.88rem;
+  margin-bottom: 0.35rem;
+}
+
+.input-group-text {
+  background: linear-gradient(180deg, #edf6f1 0%, #dcedea 100%);
+  border-color: #9bc2b5;
+  color: #134e42;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   Windows 7 Aero Buttons
+   -------------------------------------------------------------------------- */
+.btn {
+  border-radius: 4px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.12);
+  transition: all 0.15s ease;
 }
 
 .btn-primary {
-  background: var(--olive);
-  border-color: var(--olive);
+  background: var(--win7-btn-grad);
+  border-color: #0d5d51;
+  color: #ffffff;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
-  background: var(--olive-dark);
-  border-color: var(--olive-dark);
+  background: linear-gradient(180deg, #37b9a7 0%, #1f9a8a 50%, #148577 51%, #199081 100%);
+  border-color: #0a4c42;
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 8px rgba(26, 139, 124, 0.4);
+}
+
+.btn-success {
+  background: linear-gradient(180deg, #44b674 0%, #299854 50%, #1f8244 51%, #248b4a 100%);
+  border-color: #176635;
+  color: #ffffff;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.btn-success:hover {
+  background: linear-gradient(180deg, #53c984 0%, #30a960 50%, #24924e 51%, #299e55 100%);
+  border-color: #12542a;
+  color: #ffffff;
+}
+
+.btn-warning {
+  background: linear-gradient(180deg, #f7b731 0%, #e89b14 50%, #d48707 51%, #de910d 100%);
+  border-color: #a86c06;
+  color: #ffffff;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.btn-warning:hover {
+  background: linear-gradient(180deg, #fbc54d 0%, #f0a722 50%, #e0920f 51%, #e99c15 100%);
+  border-color: #8c5904;
+  color: #ffffff;
+}
+
+.btn-info {
+  background: linear-gradient(180deg, #2bb5d8 0%, #1493b8 50%, #0d7f9f 51%, #128ba9 100%);
+  border-color: #0a637c;
+  color: #ffffff;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.btn-info:hover {
+  background: linear-gradient(180deg, #3ec5e9 0%, #17a4cb 50%, #108eb2 51%, #159abb 100%);
+  border-color: #064f63;
+  color: #ffffff;
+}
+
+.btn-secondary {
+  background: linear-gradient(180deg, #7c938b 0%, #5d756d 50%, #4d645c 51%, #556c64 100%);
+  border-color: #3b5049;
+  color: #ffffff;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(180deg, #8ba39a 0%, #688279 50%, #577067 51%, #607970 100%);
+  border-color: #31433d;
+  color: #ffffff;
+}
+
+.btn-outline-primary {
+  background-color: #edf6f2;
+  border-color: #128577;
+  color: #0b6056;
+}
+
+.btn-outline-primary:hover {
+  background: var(--win7-btn-grad);
+  border-color: #0d5d51;
+  color: #ffffff;
+}
+
+.btn-outline-secondary {
+  background-color: #edf6f2;
+  border-color: #9cbdb1;
+  color: #235044;
+}
+
+.btn-outline-secondary:hover {
+  background: linear-gradient(180deg, #7c938b 0%, #5d756d 100%);
+  border-color: #3b5049;
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   Global Replacement for Harsh Pure-White & Pure-Light Elements
+   -------------------------------------------------------------------------- */
+.bg-white {
+  background-color: #f4f9f6 !important;
+}
+
+.bg-light {
+  background-color: #e5f1ea !important;
+}
+
+.bg-light-subtle {
+  background-color: #e8f3ee !important;
+}
+
+.list-group-item {
+  background-color: #f5faf7;
+  border-color: #c9dfd6;
+  color: #14362e;
+}
+
+.list-group-item:hover {
+  background-color: #e3f2eb;
+}
+
+.dropdown-menu {
+  background-color: #f2f8f5;
+  border: 1px solid #9bc2b5;
+  border-radius: 5px;
+  box-shadow: 0 4px 16px rgba(10, 45, 35, 0.16);
+}
+
+.dropdown-item {
+  color: #14362e;
+  font-weight: 500;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background: linear-gradient(180deg, #2ea594 0%, #177d70 100%);
+  color: #ffffff;
+}
+
+/* Windows 7 Keycaps */
+kbd {
+  background: linear-gradient(180deg, #f7fcf9 0%, #dbeae2 100%) !important;
+  color: #123e35 !important;
+  border: 1px solid #9dc3b6 !important;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15) !important;
+  font-family: inherit;
+  font-weight: 700;
+  border-radius: 3px;
 }
 
 .cursor-pointer {
   cursor: pointer;
 }
 
-.card-header {
-  background: #fff;
-  color: var(--olive);
-  font-weight: 600;
-  border-bottom: 2px solid #dff1ee;
+/* Windows 7 Scrollbars */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
 }
 
-.table thead th {
-  background: #e9f5f3;
-  color: #0b6f65;
-  border: 0;
-  white-space: nowrap;
+::-webkit-scrollbar-track {
+  background: #ddead2;
+  border: 1px solid #c8ded3;
 }
 
-/* Subtle Hover Transitions */
-.hover-test-item {
-  transition: background 0.15s ease;
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #badacf 0%, #9bc2b4 100%);
+  border: 1px solid #8ab6a6;
+  border-radius: 3px;
 }
 
-.hover-test-item:hover {
-  background: #f0f7f5;
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #add4c4 0%, #86b4a3 100%);
 }

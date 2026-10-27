@@ -1,36 +1,39 @@
 /* ==========================================================================
    Desktop Software Layout Styles (Top Ribbon, Horizontal Tabs, Full Width)
-   Olive Diagnostic Raigarh
+   Windows 7 Theme — Olive Diagnostic Raigarh
    ========================================================================== */
 
 .app-shell {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--body-bg, #eef2f6);
+  background: var(--body-bg, #deede4);
+  background-image: linear-gradient(180deg, #e4efe7 0%, #d8ebd0 100%);
+  background-attachment: fixed;
 }
 
 /* --------------------------------------------------------------------------
-   1. Pinned Top Unit (Header + Tabs locked together at the top when scrolling)
+   1. Pinned Top Unit (Windows 7 Aero Glass Header & Tabs)
    -------------------------------------------------------------------------- */
 .desktop-top-fixed-bar {
   position: sticky;
   top: 0;
   z-index: 1040;
   width: 100%;
-  background: #0f1c2b;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+  background: linear-gradient(180deg, #142e39 0%, #0b1c24 100%);
+  box-shadow: 0 3px 12px rgba(5, 25, 20, 0.28);
+  border-bottom: 1px solid #135245;
 }
 
 /* Desktop Title Bar */
 .desktop-header {
-  background: #0f1c2b;
+  background: transparent;
   color: #fff;
   padding: 0.5rem 1.25rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 .desktop-header-left {
@@ -40,11 +43,13 @@
 }
 
 .desktop-logo-box {
-  background: #ffffff;
-  border-radius: 6px;
+  background: linear-gradient(180deg, #ffffff 0%, #edf6f2 100%);
+  border: 1px solid #b8dacd;
+  border-radius: 5px;
   padding: 3px 8px;
   display: inline-flex;
   align-items: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .desktop-logo-box img {
@@ -62,11 +67,12 @@
 .desktop-brand-title h1 {
   font-size: 1.05rem;
   letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .desktop-subtitle {
   font-size: 0.7rem;
-  color: #5eead4;
+  color: #6ee7b7;
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -79,40 +85,43 @@
 }
 
 .desktop-clock {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.07);
   padding: 0.35rem 0.75rem;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   font-size: 0.82rem;
-  color: #94a3b8;
+  color: #a7f3d0;
   font-family: 'Consolas', monospace;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .desktop-user-badge {
-  background: rgba(15, 139, 126, 0.2);
+  background: linear-gradient(180deg, rgba(18, 133, 119, 0.35) 0%, rgba(11, 94, 84, 0.35) 100%);
   padding: 0.35rem 0.85rem;
-  border-radius: 20px;
+  border-radius: 16px;
   font-size: 0.84rem;
-  color: #e2e8f0;
-  border: 1px solid rgba(15, 139, 126, 0.4);
+  color: #e6f7f2;
+  border: 1px solid rgba(110, 231, 183, 0.45);
   display: inline-flex;
   align-items: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .desktop-logout-btn {
   font-size: 0.8rem;
   padding: 0.3rem 0.75rem;
   font-weight: 600;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 /* --------------------------------------------------------------------------
-   2. Desktop Horizontal Tabs Ribbon (Plain, Seamless, Zero Gap, Solid Highlight)
+   2. Desktop Horizontal Tabs Ribbon (Windows 7 Aero Gloss Tabs)
    -------------------------------------------------------------------------- */
 .desktop-nav-ribbon {
-  background: #162436;
-  border-bottom: 2px solid var(--olive, #0f8b7e);
+  background: linear-gradient(180deg, #16343e 0%, #0e232b 100%);
+  border-bottom: 2px solid #128577;
   padding: 0 0.75rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .desktop-tabs-container {
@@ -132,16 +141,16 @@
   border-radius: 2px;
 }
 
-/* Individual Tab Item - Plain Flat Seamless Strip, No Gaps */
+/* Individual Tab Item - Windows 7 Glass Tab */
 .desktop-tabs-container .nav-link,
 .desktop-tab-item {
-  color: #cbd5e1;
+  color: #cad8d2;
   padding: 0.65rem 1.25rem;
   font-size: 0.88rem;
   font-weight: 600;
   border-radius: 0;
   border: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
   background: transparent;
   display: inline-flex;
   align-items: center;
@@ -154,25 +163,27 @@
 }
 
 .desktop-tabs-container .nav-link:first-child {
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 .desktop-tabs-container .nav-link:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.05) 100%);
   color: #ffffff;
 }
 
-/* Active Tab: Solid Vibrant Highlight */
+/* Active Tab: Vibrant Windows 7 Aero Green Glass */
 .desktop-tabs-container .nav-link.active {
-  background: var(--olive, #0f8b7e) !important;
+  background: linear-gradient(180deg, #2fa797 0%, #177d70 50%, #0f685c 51%, #157366 100%) !important;
   color: #ffffff !important;
-  border-right-color: var(--olive, #0f8b7e) !important;
-  box-shadow: none !important;
+  border-right-color: #0d544a !important;
+  border-left-color: #0d544a !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
   font-weight: 700;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
 }
 
 /* --------------------------------------------------------------------------
-   3. Content Area (Full Screen Width)
+   3. Content Area & Command Bar Strip (No Harsh White!)
    -------------------------------------------------------------------------- */
 .content {
   margin-left: 0 !important;
@@ -181,9 +192,16 @@
   width: 100%;
 }
 
+/* Windows 7 Command Bar / Header Strip */
 .page-header-strip {
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #edf6f1 0%, #dbece2 100%);
+  border-bottom: 1px solid #a8cabb;
+  box-shadow: 0 1px 3px rgba(10, 50, 40, 0.06);
+}
+
+.page-header-strip h2 {
+  color: #113c32 !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 /* SPA Views */
