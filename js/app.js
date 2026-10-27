@@ -34,6 +34,11 @@ function show(v) {
   }
 
   updateBadge();
+
+  // Tally-style auto-focus on first interactive field in newly opened tab
+  setTimeout(() => {
+    focusFirstFieldInView(v);
+  }, 50);
 }
 
 function updateBadge() {
@@ -57,7 +62,7 @@ window.addEventListener('keydown', e => {
   if (match) {
     const fNum = parseInt(match[1], 10);
     const tabs = Array.from(document.querySelectorAll('#topNav a[data-view]'));
-    
+
     if (fNum >= 1 && fNum <= tabs.length) {
       e.preventDefault(); // Stop native browser action (F1 help, F3 search, F5 refresh, etc.)
       const targetTab = tabs[fNum - 1];
@@ -83,83 +88,250 @@ window.addEventListener('keydown', e => {
 });
 
 // --------------------------------------------------------------------------
-// Universal Enter-to-Next-Field Navigation (Like Excel / Desktop Billing Software)
-// Eliminates the need to use the mouse to move between fields
+// Universal Tally ERP / Tally Prime Style Navigation Engine
+// Supports Enter, Shift+Enter, and Arrow keys (Up, Down, Left, Right)
+// across all forms, tables, and views with instantaneous auto-focus
 // --------------------------------------------------------------------------
+
+function focusElement(el) {
+  if (!el) return;
+  el.focus();
+  if (el.tagName === 'INPUT' && typeof el.select === 'function') {
+    try { el.select(); } catch (_) { }
+  }
+  el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+function focusFirstFieldInView(v) {
+  const viewEl = $('view-' + v) || document.querySelector('.view.show');
+  if (!viewEl) return;
+
+  let target = null;
+  if (v === 'register') {
+    target = $('rgLab') || $('rgName');
+  } else if (v === 'receipt') {
+    target = $('labNo') || $('name');
+  } else if (v === 'pending') {
+    target = viewEl.querySelector('tbody button') || viewEl.querySelector('input');
+  } else if (v === 'done') {
+    target = viewEl.querySelector('tbody button') || viewEl.querySelector('input');
+  } else if (v === 'saved') {
+    target = $('receiptSearch') || viewEl.querySelector('tbody button');
+  } else if (v === 'tests') {
+    target = $('testName') || $('testSearch');
+  } else if (v === 'users') {
+    target = $('uName');
+  } else if (v === 'editor') {
+    target = $('edRows')?.querySelector('input.form-control-result:not([readonly]):not([disabled])') ||
+      $('edAdvance') || $('edDoctor');
+  }
+
+  if (!target) {
+    const fields = getViewNavElements(viewEl);
+    if (fields.length) target = fields[0];
+  }
+
+  if (target) {
+    focusElement(target);
+  }
+}
+
+function getViewNavElements(container) {
+  if (!container) {
+    container = document.querySelector('.view.show') || document.querySelector('#loginScreen') || document.body;
+  }
+
+  const selector = [
+    'input:not([type="hidden"]):not([readonly]):not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([readonly]):not([disabled])',
+    'button:not([disabled]):not(.d-none):not(.expand-btn):not(.btn-close):not([tabindex="-1"])',
+    'a.btn:not([disabled])'
+  ].join(', ');
+
+  return Array.from(container.querySelectorAll(selector)).filter(el => {
+    if (el.offsetParent === null || el.closest('.d-none')) return false;
+    if (el.closest('.desktop-header') || el.closest('.desktop-nav-ribbon')) return false;
+    return true;
+  });
+}
+
+function isCaretAtStart(inp) {
+  if (inp.tagName !== 'INPUT' && inp.tagName !== 'TEXTAREA') return true;
+  try {
+    const start = inp.selectionStart ?? 0;
+    const end = inp.selectionEnd ?? 0;
+    const len = (inp.value || '').length;
+    return start === 0 && (end === 0 || end === len);
+  } catch (_) {
+    return true;
+  }
+}
+
+function isCaretAtEnd(inp) {
+  if (inp.tagName !== 'INPUT' && inp.tagName !== 'TEXTAREA') return true;
+  try {
+    const start = inp.selectionStart ?? 0;
+    const end = inp.selectionEnd ?? 0;
+    const len = (inp.value || '').length;
+    return (start === len && end === len) || (start === 0 && end === len);
+  } catch (_) {
+    return true;
+  }
+}
+
+function findTableVerticalNeighbor(currentInput, direction) {
+  const currentTr = currentInput.closest('tr');
+  if (!currentTr) return null;
+  const tbody = currentTr.closest('tbody');
+  if (!tbody) return null;
+
+  const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => r.offsetParent !== null && !r.closest('.d-none'));
+  const currentIdx = rows.indexOf(currentTr);
+  if (currentIdx === -1) return null;
+
+  const targetIdx = direction === 'down' ? currentIdx + 1 : currentIdx - 1;
+  if (targetIdx < 0 || targetIdx >= rows.length) return null;
+
+  const targetTr = rows[targetIdx];
+  const fieldName = currentInput.dataset?.f;
+  if (fieldName) {
+    const match = targetTr.querySelector(`[data-f="${fieldName}"]:not([readonly]):not([disabled])`);
+    if (match && match.offsetParent !== null) return match;
+  }
+
+  const fallback = targetTr.querySelector('input:not([readonly]):not([disabled]), button:not([disabled]), select:not([disabled])');
+  if (fallback && fallback.offsetParent !== null) return fallback;
+
+  return null;
+}
+
 function initEnterKeyNavigation() {
   document.addEventListener('keydown', e => {
-    // Only capture Enter key
-    if (e.key !== 'Enter') return;
+    if (e.defaultPrevented) return;
 
-    const target = e.target;
-    if (!target) return;
-
-    // If Enter was pressed directly on an action button, let it trigger normally
-    if (target.tagName === 'BUTTON') return;
-
-    const isInput = target.tagName === 'INPUT';
-    const isSelect = target.tagName === 'SELECT';
-    const isTextarea = target.tagName === 'TEXTAREA';
-
-    if (!isInput && !isSelect && !isTextarea) return;
-
-    // In textarea: Shift+Enter inserts a new line; plain Enter moves forward to the next field
-    if (isTextarea && (e.shiftKey || e.ctrlKey || e.altKey)) {
+    const key = e.key;
+    if (key !== 'Enter' && key !== 'ArrowDown' && key !== 'ArrowUp' && key !== 'ArrowRight' && key !== 'ArrowLeft') {
       return;
     }
 
-    // Determine current active view or form container
-    let container = target.closest('.view.show') || target.closest('#loginScreen') || target.closest('form') || document.body;
+    const appShell = $('appShell');
+    const isLogin = !appShell || appShell.classList.contains('d-none');
+    const container = isLogin ? $('loginScreen') : (document.querySelector('.view.show') || document.body);
+    if (!container) return;
 
-    // Collect all visible, non-disabled, non-readonly interactive fields
-    const selector = [
-      'input:not([type="hidden"]):not([readonly]):not([disabled])',
-      'select:not([disabled])',
-      'textarea:not([readonly]):not([disabled])',
-      'button.btn-primary:not([disabled])',
-      'button[type="submit"]:not([disabled])',
-      '#rgSubmit:not([disabled])',
-      '#saveBtn:not([disabled])',
-      '#edComplete:not([disabled])',
-      '#loginBtn:not([disabled])'
-    ].join(', ');
+    const target = e.target;
+    const isInput = target && target.tagName === 'INPUT';
+    const isSelect = target && target.tagName === 'SELECT';
+    const isTextarea = target && target.tagName === 'TEXTAREA';
+    const isButton = target && target.tagName === 'BUTTON';
+    const isInteractive = isInput || isSelect || isTextarea || isButton;
 
-    const fields = Array.from(container.querySelectorAll(selector))
-      .filter(el => el.offsetParent !== null && !el.closest('.d-none'));
+    // 1. If NO form field is currently focused (focus on body or topNav tab),
+    // pressing Enter or Down Arrow immediately focuses the first element in the active tab!
+    if (!isInteractive || target.closest('#topNav') || target.tagName === 'BODY') {
+      if (key === 'Enter' || key === 'ArrowDown') {
+        e.preventDefault();
+        const curView = document.querySelector('.view.show');
+        const viewId = curView ? curView.id.replace('view-', '') : '';
+        focusFirstFieldInView(viewId);
+      }
+      return;
+    }
 
+    // 2. In Textarea: Shift+Enter or Ctrl+Enter inserts a new line. Plain Enter moves to next field.
+    if (isTextarea && key === 'Enter' && (e.shiftKey || e.ctrlKey || e.altKey)) {
+      return;
+    }
+
+    // 3. For buttons: If Enter is pressed, let action buttons click normally.
+    if (isButton && key === 'Enter') {
+      return; // native click execution
+    }
+
+    // 4. For <select>: Up/Down arrow changes the option natively. Only Enter moves to next field.
+    if (isSelect && (key === 'ArrowDown' || key === 'ArrowUp')) {
+      return; // native select behavior
+    }
+
+    const fields = getViewNavElements(container);
     const currentIndex = fields.indexOf(target);
     if (currentIndex === -1) return;
 
-    // Shift + Enter: Move to previous field
-    if (e.shiftKey) {
-      if (currentIndex > 0) {
-        e.preventDefault();
-        const prev = fields[currentIndex - 1];
-        prev.focus();
-        if (prev.tagName === 'INPUT' && typeof prev.select === 'function') {
-          try { prev.select(); } catch (_) {}
+    // ----------------------------------------------------
+    // ENTER or ARROW DOWN: Move Forward / Down
+    // ----------------------------------------------------
+    if ((key === 'Enter' && !e.shiftKey) || key === 'ArrowDown') {
+      // In tables (like editor parameters, pending table, done table), ArrowDown navigates to row below
+      if (key === 'ArrowDown') {
+        const neighbor = findTableVerticalNeighbor(target, 'down');
+        if (neighbor) {
+          e.preventDefault();
+          focusElement(neighbor);
+          return;
         }
-        prev.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+
+      e.preventDefault();
+      if (currentIndex < fields.length - 1) {
+        const next = fields[currentIndex + 1];
+        focusElement(next);
+      } else {
+        // Reached end of form: focus primary button if not already there
+        const primaryBtn = container.querySelector('button.btn-primary, button[type="submit"], #rgSubmit, #saveBtn, #edComplete');
+        if (primaryBtn && primaryBtn !== target) {
+          focusElement(primaryBtn);
+        }
       }
       return;
     }
 
-    // Plain Enter: Move to next field
-    e.preventDefault();
+    // ----------------------------------------------------
+    // SHIFT + ENTER or ARROW UP: Move Backward / Up
+    // ----------------------------------------------------
+    if ((key === 'Enter' && e.shiftKey) || key === 'ArrowUp') {
+      // In tables, ArrowUp navigates to row above
+      if (key === 'ArrowUp') {
+        const neighbor = findTableVerticalNeighbor(target, 'up');
+        if (neighbor) {
+          e.preventDefault();
+          focusElement(neighbor);
+          return;
+        }
+      }
 
-    if (currentIndex < fields.length - 1) {
-      const next = fields[currentIndex + 1];
-      next.focus();
-      if (next.tagName === 'INPUT' && typeof next.select === 'function') {
-        try { next.select(); } catch (_) {}
+      e.preventDefault();
+      if (currentIndex > 0) {
+        const prev = fields[currentIndex - 1];
+        focusElement(prev);
       }
-      next.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    } else {
-      // Reached the end: focus on the primary action / submit button
-      const lastField = fields[fields.length - 1];
-      if (lastField.tagName === 'BUTTON') {
-        lastField.focus();
+      return;
+    }
+
+    // ----------------------------------------------------
+    // ARROW RIGHT: Move to next field to the right
+    // ----------------------------------------------------
+    if (key === 'ArrowRight') {
+      if (isCaretAtEnd(target) || isButton || isSelect) {
+        if (currentIndex < fields.length - 1) {
+          e.preventDefault();
+          focusElement(fields[currentIndex + 1]);
+        }
       }
+      return;
+    }
+
+    // ----------------------------------------------------
+    // ARROW LEFT: Move to previous field to the left
+    // ----------------------------------------------------
+    if (key === 'ArrowLeft') {
+      if (isCaretAtStart(target) || isButton || isSelect) {
+        if (currentIndex > 0) {
+          e.preventDefault();
+          focusElement(fields[currentIndex - 1]);
+        }
+      }
+      return;
     }
   });
 }

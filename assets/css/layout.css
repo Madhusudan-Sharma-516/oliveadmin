@@ -196,7 +196,8 @@
 }
 
 /* Hide legacy sidebar elements */
-.sidebar, #menuBtn {
+.sidebar,
+#menuBtn {
   display: none !important;
 }
 
@@ -204,9 +205,11 @@
   .desktop-header {
     padding: 0.45rem 0.75rem;
   }
+
   .desktop-brand-title h1 {
     font-size: 0.92rem;
   }
+
   .desktop-tabs-container .nav-link {
     padding: 0.42rem 0.75rem;
     font-size: 0.82rem;

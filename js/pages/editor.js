@@ -153,10 +153,33 @@ function updateUrinePhraseButtons(idx) {
   });
 }
 
+window.toggleTestRemark = idx => {
+  const row = $(`testRemarkRow_${idx}`);
+  const btn = $(`testRemarkBtn_${idx}`);
+  const inp = $(`testRemark_${idx}`);
+  if (!row) return;
+  const isHidden = row.classList.toggle('d-none');
+  if (!isHidden && inp) {
+    setTimeout(() => inp.focus(), 50);
+  }
+  if (btn) {
+    const hasVal = Boolean(inp && inp.value && inp.value.trim().length > 0);
+    btn.className = `btn btn-sm ${hasVal ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2`;
+    btn.innerHTML = `<i class="bi ${hasVal ? 'bi-chat-left-text-fill' : 'bi-chat-left'}"></i>`;
+  }
+};
+
 window.clearTestRemark = idx => {
   if (editorState[idx]) editorState[idx].remark = '';
-  const textarea = $(`testRemark_${idx}`);
-  if (textarea) textarea.value = '';
+  const inp = $(`testRemark_${idx}`);
+  if (inp) inp.value = '';
+  const row = $(`testRemarkRow_${idx}`);
+  if (row) row.classList.add('d-none');
+  const btn = $(`testRemarkBtn_${idx}`);
+  if (btn) {
+    btn.className = 'btn btn-sm btn-outline-secondary py-0 px-2';
+    btn.innerHTML = '<i class="bi bi-chat-left"></i>';
+  }
 };
 
 window.calculateLipidProfile = idx => {
@@ -262,149 +285,210 @@ function renderEditorRows() {
   const r = find(editing);
   if (!r) return;
 
-  const html = (r.tests || []).map((t, i) => {
-    const st = editorState[i] || {};
-    const tmpl = TEST_TEMPLATES[st.templateId] || findTemplate(t.name);
-    const hasTmpl = Boolean(tmpl);
-    const isCollapsed = Boolean(st.collapsed);
+  const tests = r.tests || [];
+  if (!tests.length) {
+    const edRowsEl = $('edRows');
+    if (edRowsEl) edRowsEl.innerHTML = '<div class="alert alert-secondary text-center">No tests selected</div>';
+    return;
+  }
 
-    let bodyHtml = '';
-    if (hasTmpl) {
-      const rows = tmpl.items.map(item => {
-        if (item.isHeader) {
-          return `<tr class="param-cat-row"><td colspan="4"><i class="bi bi-folder2 me-1"></i>${esc(item.title)}</td></tr>`;
-        }
-        const pData = (st.params && st.params[item.name]) || {};
-        const pVal = pData.value !== undefined ? pData.value : (item.defaultVal || '');
-        const rangeStatus = checkValueRange(pVal, item.range);
-        const isAbnormal = rangeStatus === 'high' || rangeStatus === 'low' || rangeStatus === 'abnormal';
-        return `<tr>
-          <td class="${item.indent ? 'param-indent' : 'fw-semibold'}">${esc(item.name)}</td>
-          <td><input class="form-control form-control-sm form-control-result ${isAbnormal ? 'is-abnormal-input' : ''}" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="value" value="${esc(pVal)}" placeholder="Enter result..."></td>
-          <td><input class="form-control form-control-sm bg-light text-muted border-0" readonly tabindex="-1" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="unit" value="${esc(item.unit)}"></td>
-          <td><input class="form-control form-control-sm bg-light text-muted border-0" readonly tabindex="-1" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="range" value="${esc(item.range)}"></td>
-        </tr>`;
-      }).join('');
+  let html = '';
+  let singleGroup = [];
 
-      bodyHtml = `
-        <div class="table-responsive">
-          <table class="table table-bordered table-sm align-middle mb-0 param-table">
-            <thead>
-              <tr>
-                <th style="width:36%">Investigation / Parameter</th>
-                <th style="width:24%">Result <span class="badge bg-primary text-white ms-1">Fill here</span></th>
-                <th style="width:20%">Unit <span class="badge bg-secondary ms-1">Fixed</span></th>
-                <th style="width:20%">Reference Range <span class="badge bg-secondary ms-1">Fixed</span></th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-        ${tmpl.id === 'urine' ? `
-          <div class="p-2 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <button type="button" class="btn btn-sm btn-outline-success" onclick="fillUrineDefaults(${i})"><i class="bi bi-magic me-1"></i>Quick Fill Normal Values</button>
-            <span class="small text-muted"><i class="bi bi-info-circle me-1"></i>Siemens Clinitek Status+ Urine Analyzer</span>
-          </div>
-          <div class="p-3 border-top urine-remark-box">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-              <div class="d-flex align-items-center gap-2">
-                <span class="fw-bold small text-dark"><i class="bi bi-chat-square-text-fill text-primary me-1"></i>REMARK : URINE ANALYSIS</span>
-                <span class="badge bg-secondary-subtle text-secondary border small">Default Fixed Note &middot; Extra Addable</span>
-              </div>
-              <div class="d-flex gap-1">
-                <button type="button" class="btn btn-xs btn-outline-secondary py-1 px-2" style="font-size:0.75rem;" onclick="resetUrineRemark(${i})" title="Reset to standard fixed note">
-                  <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Default
-                </button>
-                <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" style="font-size:0.75rem;" onclick="clearUrineRemark(${i})" title="Clear remarks">
-                  <i class="bi bi-trash me-1"></i>Clear
-                </button>
-              </div>
-            </div>
-            <textarea id="urineRemark_${i}" class="form-control form-control-sm form-control-result mb-2" data-test-idx="${i}" data-f="remark" rows="3" style="font-size: 0.88rem; font-weight: 600; line-height: 1.5; resize: vertical;" placeholder="Urine Analysis remarks (type freely, press Shift+Enter for new line)...">${esc(st.remark !== undefined ? st.remark : (tmpl.remark || ''))}</textarea>
-            <div class="d-flex align-items-center justify-content-between mb-1">
-              <span class="small text-muted fw-semibold" style="font-size:0.76rem;">
-                <i class="bi bi-list-check me-1"></i>Readymade Lines (Phrases) — Click to add / remove:
-              </span>
-              <span class="small text-muted d-none d-sm-inline" style="font-size:0.72rem;"><kbd class="bg-white text-dark border px-1">Shift+Enter</kbd> new line &middot; <kbd class="bg-white text-dark border px-1">Enter</kbd> next test</span>
-            </div>
-            <div id="urinePhrases_${i}" class="d-flex flex-wrap gap-1">
-              ${URINE_READY_REMARKS.map((line, pIdx) => {
-                const curRemark = (st.remark !== undefined ? st.remark : (tmpl.remark || ''));
-                const isSel = curRemark.includes(line.trim());
-                return `<button type="button" class="btn btn-sm ${isSel ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2 ready-phrase-btn" style="font-size: 0.74rem; border-radius: 12px; white-space: normal; text-align: left;" onclick="toggleUrineRemarkPhrase(${i}, ${pIdx})">
-                  ${isSel ? '<i class="bi bi-check2 me-1"></i>' : '<i class="bi bi-plus me-1"></i>'}${esc(line)}
-                </button>`;
-              }).join('')}
-            </div>
-          </div>` : tmpl.id === 'lipid' ? `
-          <div class="p-2 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span class="small text-muted"><i class="bi bi-calculator text-primary me-1"></i><b>Auto-Calculate:</b> VLDL = TG/5 &middot; LDL = Chol &minus; HDL &minus; VLDL &middot; Ratio = Chol/HDL</span>
-            <button type="button" class="btn btn-xs btn-outline-primary py-1 px-2" style="font-size:0.75rem;" onclick="calculateLipidProfile(${i})"><i class="bi bi-arrow-repeat me-1"></i>Recalculate</button>
-          </div>
-          <div class="p-2 border-top bg-light-subtle test-remark-box">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="small fw-semibold text-secondary">
-                <i class="bi bi-chat-left-dots text-primary me-1"></i>Remark / Interpretation (${esc(tmpl.title || t.name)}):
-              </span>
-              ${st.remark ? `<button type="button" class="btn btn-xs btn-outline-danger py-0 px-2" style="font-size:0.72rem;" onclick="clearTestRemark(${i})"><i class="bi bi-x me-1"></i>Clear</button>` : ''}
-            </div>
-            <textarea id="testRemark_${i}" class="form-control form-control-sm form-control-result test-remark-input" data-test-idx="${i}" data-f="remark" rows="2" style="font-size: 0.85rem; resize: vertical;" placeholder="Add remark / interpretation for this test (optional, press Shift+Enter for new line)...">${esc(st.remark || '')}</textarea>
-          </div>
-        ` : `
-          <div class="p-2 border-top bg-light-subtle test-remark-box">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="small fw-semibold text-secondary">
-                <i class="bi bi-chat-left-dots text-primary me-1"></i>Remark / Interpretation (${esc(tmpl.title || t.name)}):
-              </span>
-              ${st.remark ? `<button type="button" class="btn btn-xs btn-outline-danger py-0 px-2" style="font-size:0.72rem;" onclick="clearTestRemark(${i})"><i class="bi bi-x me-1"></i>Clear</button>` : ''}
-            </div>
-            <textarea id="testRemark_${i}" class="form-control form-control-sm form-control-result test-remark-input" data-test-idx="${i}" data-f="remark" rows="2" style="font-size: 0.85rem; resize: vertical;" placeholder="Add remark / interpretation for this test (optional, press Shift+Enter for new line)...">${esc(st.remark || '')}</textarea>
-          </div>
-          ${tmpl.method ? `<div class="p-2 bg-light border-top text-muted small"><i class="bi bi-info-circle me-1"></i>${esc(tmpl.method)}</div>` : ''}
-        `}
-      `;
-    } else {
+  const flushSingleTests = () => {
+    if (!singleGroup.length) return '';
+    const rowsHtml = singleGroup.map(({ t, i }) => {
+      const st = editorState[i] || {};
       const nonTmplStatus = checkValueRange(st.value || '', st.range || '');
-      const isAbnormalNonTmpl = nonTmplStatus === 'high' || nonTmplStatus === 'low' || nonTmplStatus === 'abnormal';
-      bodyHtml = `
+      const isAbnormal = nonTmplStatus === 'high' || nonTmplStatus === 'low' || nonTmplStatus === 'abnormal';
+      const hasRemark = Boolean(st.remark && st.remark.trim().length > 0);
+
+      return `
+        <tr id="testRow_${i}">
+          <td class="text-center text-muted fw-semibold align-middle" style="width:5%">${i + 1}</td>
+          <td class="fw-bold text-dark align-middle" style="width:32%">
+            <span>${esc(t.name)}</span>
+          </td>
+          <td style="width:25%">
+            <input class="form-control form-control-sm form-control-result ${isAbnormal ? 'is-abnormal-input' : ''}" 
+                   data-test-idx="${i}" data-simple="true" data-f="value" 
+                   value="${esc(st.value || '')}" placeholder="Enter result...">
+          </td>
+          <td style="width:17%">
+            <input class="form-control form-control-sm bg-light" 
+                   data-test-idx="${i}" data-simple="true" data-f="unit" 
+                   value="${esc(st.unit || '')}" placeholder="Unit">
+          </td>
+          <td style="width:15%">
+            <input class="form-control form-control-sm bg-light" 
+                   data-test-idx="${i}" data-simple="true" data-f="range" 
+                   value="${esc(st.range || '')}" placeholder="Reference Range">
+          </td>
+          <td class="text-center align-middle" style="width:6%">
+            <button type="button" class="btn btn-sm ${hasRemark ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2" 
+                    id="testRemarkBtn_${i}" onclick="toggleTestRemark(${i})" 
+                    title="${hasRemark ? 'Edit Remark' : 'Add Remark'}">
+              <i class="bi ${hasRemark ? 'bi-chat-left-text-fill' : 'bi-chat-left'}"></i>
+            </button>
+          </td>
+        </tr>
+        <tr class="test-remark-row ${hasRemark ? '' : 'd-none'}" id="testRemarkRow_${i}">
+          <td colspan="6" class="p-2 ps-4">
+            <div class="d-flex align-items-center gap-2">
+              <span class="small fw-semibold text-secondary text-nowrap">
+                <i class="bi bi-chat-left-dots text-primary me-1"></i>${esc(t.name)} Remark:
+              </span>
+              <input type="text" class="form-control form-control-sm form-control-result" 
+                     data-test-idx="${i}" data-f="remark" id="testRemark_${i}" 
+                     value="${esc(st.remark || '')}" 
+                     placeholder="Optional note / interpretation for ${esc(t.name)}...">
+              <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" 
+                      onclick="clearTestRemark(${i})" title="Clear Remark">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    const output = `
+      <div class="card shadow-sm mb-3 border lab-sheet-card">
+        <div class="card-header bg-white py-2 px-3 d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-table text-primary"></i>
+            <span class="fw-bold text-dark">Routine Investigations</span>
+            <span class="badge bg-secondary-subtle text-secondary border small">${singleGroup.length} test${singleGroup.length > 1 ? 's' : ''}</span>
+          </div>
+          <span class="small text-muted d-none d-md-inline">
+            <i class="bi bi-keyboard text-primary me-1"></i>Press <kbd class="bg-white text-dark border px-1">Enter</kbd> to move to next test
+          </span>
+        </div>
         <div class="table-responsive">
-          <table class="table table-bordered table-sm align-middle mb-0">
+          <table class="table table-hover table-bordered table-sm align-middle mb-0 lab-table">
             <thead>
               <tr>
-                <th style="width:36%">Test Name</th>
-                <th style="width:24%">Result</th>
-                <th style="width:20%">Unit</th>
-                <th style="width:20%">Reference Range</th>
+                <th class="text-center" style="width:5%">#</th>
+                <th style="width:32%">Investigation / Parameter</th>
+                <th style="width:25%">Result <span class="badge bg-primary text-white ms-1">Fill here</span></th>
+                <th style="width:17%">Unit</th>
+                <th style="width:15%">Reference Range</th>
+                <th class="text-center" style="width:6%">Remark</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="fw-semibold">${esc(t.name)}</td>
-                <td><input class="form-control form-control-sm form-control-result ${isAbnormalNonTmpl ? 'is-abnormal-input' : ''}" data-test-idx="${i}" data-simple="true" data-f="value" value="${esc(st.value || '')}" placeholder="Enter result..."></td>
-                <td><input class="form-control form-control-sm" data-test-idx="${i}" data-simple="true" data-f="unit" value="${esc(st.unit || '')}" placeholder="Unit"></td>
-                <td><input class="form-control form-control-sm" data-test-idx="${i}" data-simple="true" data-f="range" value="${esc(st.range || '')}" placeholder="Reference Range"></td>
-              </tr>
+              ${rowsHtml}
             </tbody>
           </table>
+        </div>
+      </div>
+    `;
+    singleGroup = [];
+    return output;
+  };
+
+  tests.forEach((t, i) => {
+    const st = editorState[i] || {};
+    const tmpl = TEST_TEMPLATES[st.templateId] || findTemplate(t.name);
+    const hasTmpl = Boolean(tmpl);
+
+    if (!hasTmpl) {
+      singleGroup.push({ t, i });
+      return;
+    }
+
+    // Flush any pending single tests before rendering this template profile
+    html += flushSingleTests();
+
+    const isCollapsed = Boolean(st.collapsed);
+    const rows = tmpl.items.map(item => {
+      if (item.isHeader) {
+        return `<tr class="param-cat-row"><td colspan="4"><i class="bi bi-folder2 me-1"></i>${esc(item.title)}</td></tr>`;
+      }
+      const pData = (st.params && st.params[item.name]) || {};
+      const pVal = pData.value !== undefined ? pData.value : (item.defaultVal || '');
+      const rangeStatus = checkValueRange(pVal, item.range);
+      const isAbnormal = rangeStatus === 'high' || rangeStatus === 'low' || rangeStatus === 'abnormal';
+      return `<tr>
+        <td class="${item.indent ? 'param-indent' : 'fw-semibold'}">${esc(item.name)}</td>
+        <td><input class="form-control form-control-sm form-control-result ${isAbnormal ? 'is-abnormal-input' : ''}" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="value" value="${esc(pVal)}" placeholder="Enter result..."></td>
+        <td><input class="form-control form-control-sm bg-light text-muted border-0" readonly tabindex="-1" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="unit" value="${esc(item.unit)}"></td>
+        <td><input class="form-control form-control-sm bg-light text-muted border-0" readonly tabindex="-1" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="range" value="${esc(item.range)}"></td>
+      </tr>`;
+    }).join('');
+
+    let extraHtml = '';
+    if (tmpl.id === 'urine') {
+      extraHtml = `
+        <div class="p-2 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <button type="button" class="btn btn-sm btn-outline-success" onclick="fillUrineDefaults(${i})"><i class="bi bi-magic me-1"></i>Quick Fill Normal Values</button>
+          <span class="small text-muted"><i class="bi bi-info-circle me-1"></i>Siemens Clinitek Status+ Urine Analyzer</span>
+        </div>
+        <div class="p-3 border-top urine-remark-box">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="fw-bold small text-dark"><i class="bi bi-chat-square-text-fill text-primary me-1"></i>REMARK : URINE ANALYSIS</span>
+            </div>
+            <div class="d-flex gap-1">
+              <button type="button" class="btn btn-xs btn-outline-secondary py-1 px-2" style="font-size:0.75rem;" onclick="resetUrineRemark(${i})" title="Reset to standard fixed note">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Default
+              </button>
+              <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" style="font-size:0.75rem;" onclick="clearUrineRemark(${i})" title="Clear remarks">
+                <i class="bi bi-trash me-1"></i>Clear
+              </button>
+            </div>
+          </div>
+          <textarea id="urineRemark_${i}" class="form-control form-control-sm form-control-result mb-2" data-test-idx="${i}" data-f="remark" rows="3" style="font-size: 0.88rem; font-weight: 600; line-height: 1.5; resize: vertical;" placeholder="Urine Analysis remarks...">${esc(st.remark !== undefined ? st.remark : (tmpl.remark || ''))}</textarea>
+          <div class="d-flex flex-wrap gap-1" id="urinePhrases_${i}">
+            ${URINE_READY_REMARKS.map((line, pIdx) => {
+              const curRemark = (st.remark !== undefined ? st.remark : (tmpl.remark || ''));
+              const isSel = curRemark.includes(line.trim());
+              return `<button type="button" class="btn btn-sm ${isSel ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2 ready-phrase-btn" style="font-size: 0.74rem; border-radius: 12px; white-space: normal; text-align: left;" onclick="toggleUrineRemarkPhrase(${i}, ${pIdx})">
+                ${isSel ? '<i class="bi bi-check2 me-1"></i>' : '<i class="bi bi-plus me-1"></i>'}${esc(line)}
+              </button>`;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    } else if (tmpl.id === 'lipid') {
+      extraHtml = `
+        <div class="p-2 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span class="small text-muted"><i class="bi bi-calculator text-primary me-1"></i><b>Auto-Calculate:</b> VLDL = TG/5 &middot; LDL = Chol &minus; HDL &minus; VLDL &middot; Ratio = Chol/HDL</span>
+          <button type="button" class="btn btn-xs btn-outline-primary py-1 px-2" style="font-size:0.75rem;" onclick="calculateLipidProfile(${i})"><i class="bi bi-arrow-repeat me-1"></i>Recalculate</button>
         </div>
         <div class="p-2 border-top bg-light-subtle test-remark-box">
           <div class="d-flex justify-content-between align-items-center mb-1">
             <span class="small fw-semibold text-secondary">
-              <i class="bi bi-chat-left-dots text-primary me-1"></i>Remark / Interpretation (${esc(t.name)}):
+              <i class="bi bi-chat-left-dots text-primary me-1"></i>Remark / Interpretation (${esc(tmpl.title || t.name)}):
             </span>
             ${st.remark ? `<button type="button" class="btn btn-xs btn-outline-danger py-0 px-2" style="font-size:0.72rem;" onclick="clearTestRemark(${i})"><i class="bi bi-x me-1"></i>Clear</button>` : ''}
           </div>
-          <textarea id="testRemark_${i}" class="form-control form-control-sm form-control-result test-remark-input" data-test-idx="${i}" data-f="remark" rows="2" style="font-size: 0.85rem; resize: vertical;" placeholder="Add remark / interpretation for this test (optional, press Shift+Enter for new line)...">${esc(st.remark || '')}</textarea>
+          <input type="text" id="testRemark_${i}" class="form-control form-control-sm form-control-result test-remark-input" data-test-idx="${i}" data-f="remark" value="${esc(st.remark || '')}" placeholder="Optional remark / interpretation...">
         </div>
+      `;
+    } else {
+      extraHtml = `
+        <div class="p-2 border-top bg-light-subtle test-remark-box">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small fw-semibold text-secondary">
+              <i class="bi bi-chat-left-dots text-primary me-1"></i>Remark / Interpretation (${esc(tmpl.title || t.name)}):
+            </span>
+            ${st.remark ? `<button type="button" class="btn btn-xs btn-outline-danger py-0 px-2" style="font-size:0.72rem;" onclick="clearTestRemark(${i})"><i class="bi bi-x me-1"></i>Clear</button>` : ''}
+          </div>
+          <input type="text" id="testRemark_${i}" class="form-control form-control-sm form-control-result test-remark-input" data-test-idx="${i}" data-f="remark" value="${esc(st.remark || '')}" placeholder="Optional remark / interpretation...">
+        </div>
+        ${tmpl.method ? `<div class="p-2 bg-light border-top text-muted small"><i class="bi bi-info-circle me-1"></i>${esc(tmpl.method)}</div>` : ''}
       `;
     }
 
-    return `
-      <div class="card shadow-sm mb-3 test-card">
-        <div class="test-card-header d-flex justify-content-between align-items-center gap-2 cursor-pointer" onclick="toggleTestCollapse(${i})">
+    html += `
+      <div class="card shadow-sm mb-3 border test-card">
+        <div class="card-header bg-white py-2 px-3 d-flex justify-content-between align-items-center cursor-pointer" onclick="toggleTestCollapse(${i})">
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="fw-bold fs-6 text-dark">${esc(t.name)}</span>
-            ${hasTmpl ? `<span class="badge bg-primary-subtle text-primary border border-primary-subtle small fw-normal">${tmpl.items.filter(x => !x.isHeader).length} parameters</span>` : ''}
+            <i class="bi bi-folder2-open text-primary"></i>
+            <span class="fw-bold text-dark">${esc(tmpl.title || t.name)}</span>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle small fw-normal">${tmpl.items.filter(x => !x.isHeader).length} parameters</span>
+            ${tmpl.subtitle ? `<span class="small text-muted d-none d-lg-inline">&middot; ${esc(tmpl.subtitle)}</span>` : ''}
           </div>
           <div class="d-flex align-items-center gap-2">
             <span class="badge bg-light text-muted border small d-none d-sm-inline" id="testStatusBadge_${i}">${isCollapsed ? 'Collapsed' : 'Open'}</span>
@@ -413,14 +497,31 @@ function renderEditorRows() {
             </button>
           </div>
         </div>
-        <div class="card-body p-0 ${isCollapsed ? 'd-none' : ''}" id="testCardBody_${i}">${bodyHtml}</div>
+        <div class="card-body p-0 ${isCollapsed ? 'd-none' : ''}" id="testCardBody_${i}">
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm align-middle mb-0 param-table">
+              <thead>
+                <tr>
+                  <th style="width:36%">Investigation / Parameter</th>
+                  <th style="width:24%">Result <span class="badge bg-primary text-white ms-1">Fill here</span></th>
+                  <th style="width:20%">Unit <span class="badge bg-secondary ms-1">Fixed</span></th>
+                  <th style="width:20%">Reference Range <span class="badge bg-secondary ms-1">Fixed</span></th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+          ${extraHtml}
+        </div>
       </div>
     `;
-  }).join('');
+  });
+
+  html += flushSingleTests();
 
   const edRowsEl = $('edRows');
   if (edRowsEl) {
-    edRowsEl.innerHTML = html || '<div class="alert alert-secondary text-center">No tests selected</div>';
+    edRowsEl.innerHTML = html;
   }
 }
 
@@ -528,6 +629,12 @@ function initEditorEvents() {
     if (inp.dataset.f === 'remark') {
       editorState[idx].remark = inp.value;
       updateUrinePhraseButtons(idx);
+      const btn = $(`testRemarkBtn_${idx}`);
+      if (btn) {
+        const hasVal = Boolean(inp.value && inp.value.trim().length > 0);
+        btn.className = `btn btn-sm ${hasVal ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2`;
+        btn.innerHTML = `<i class="bi ${hasVal ? 'bi-chat-left-text-fill' : 'bi-chat-left'}"></i>`;
+      }
     } else if (inp.dataset.simple === 'true') {
       editorState[idx][inp.dataset.f] = inp.value;
       const row = inp.closest('tr');

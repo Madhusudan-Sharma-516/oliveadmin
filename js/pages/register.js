@@ -66,6 +66,21 @@ function initRegister() {
   const rgSearchEl = $('rgSearch');
   if (rgSearchEl) {
     rgSearchEl.oninput = renderRegTests;
+    rgSearchEl.onkeydown = e => {
+      if (e.key === 'Enter') {
+        const firstCb = $('rgTests')?.querySelector('input[type="checkbox"]');
+        if (firstCb && rgSearchEl.value.trim().length > 0) {
+          e.preventDefault();
+          firstCb.checked = !firstCb.checked;
+          firstCb.dispatchEvent(new Event('change', { bubbles: true }));
+          rgSearchEl.value = '';
+          renderRegTests();
+        } else {
+          e.preventDefault();
+          focusElement($('rgSubmit'));
+        }
+      }
+    };
   }
 
   const regForm = $('regForm');

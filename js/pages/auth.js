@@ -13,7 +13,7 @@ function initAuth() {
       const loginUserEl = $('loginUser');
       const loginPassEl = $('loginPass');
       const loginErrEl = $('loginErr');
-      
+
       const name = (loginUserEl?.value || '').trim().toLowerCase();
       const pass = loginPassEl?.value || '';
       const u = users.find(x => x.name.toLowerCase() === name);
@@ -41,7 +41,7 @@ function initAuth() {
 function startApp() {
   $('loginScreen')?.classList.add('d-none');
   $('appShell')?.classList.remove('d-none');
-  
+
   const whoami = $('whoami');
   if (whoami && user) {
     whoami.textContent = `${user.name} (${user.role})`;
@@ -49,7 +49,7 @@ function startApp() {
 
   // Filter accessible menus by role
   const keys = Object.keys(MENUS).filter(k => MENUS[k][2].includes(user?.role));
-  
+
   // Render tabs into top horizontal ribbon
   const topNav = $('topNav') || $('sideNav');
   if (topNav) {

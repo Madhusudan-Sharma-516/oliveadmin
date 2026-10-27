@@ -171,9 +171,35 @@ function initReceipt() {
     advanceEl.oninput = updateTotals;
   }
 
+  const testDropdownBtn = $('testDropdownBtn');
+  if (testDropdownBtn) {
+    testDropdownBtn.addEventListener('shown.bs.dropdown', () => {
+      setTimeout(() => $('testDropdownSearch')?.focus(), 50);
+    });
+  }
+
   const testDropdownSearch = $('testDropdownSearch');
   if (testDropdownSearch) {
     testDropdownSearch.oninput = renderTestDropdownList;
+    testDropdownSearch.onkeydown = e => {
+      if (e.key === 'Enter') {
+        const firstBtn = $('testDropdownList')?.querySelector('button');
+        if (firstBtn && testDropdownSearch.value.trim().length > 0) {
+          e.preventDefault();
+          firstBtn.click();
+          testDropdownSearch.value = '';
+          renderTestDropdownList();
+        } else {
+          // If empty, close dropdown and move to advance field
+          e.preventDefault();
+          try {
+            const dropdown = bootstrap.Dropdown.getInstance(testDropdownBtn);
+            if (dropdown) dropdown.hide();
+          } catch (_) {}
+          focusElement($('advance'));
+        }
+      }
+    };
   }
 
   const saveBtn = $('saveBtn');
