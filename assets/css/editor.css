@@ -1,9 +1,9 @@
 /* ==========================================================================
-   Report Editor & Test Selection Styles — Windows 7 Theme
+   Report Editor & Test Selection Styles — Windows 7 Aero Blue Theme
    Olive Diagnostic Raigarh
    ========================================================================== */
 
-/* Test Checkbox Grid (Registration Page - Soft Light Green Box, No Harsh White) */
+/* Test Checkbox Grid (Registration Page - Soft Light Blue Box, No Harsh White) */
 .test-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
@@ -11,9 +11,9 @@
   max-height: 300px;
   overflow-y: auto;
   padding: .6rem;
-  border: 1px solid #9fc4b7;
+  border: 1px solid #9fc1de;
   border-radius: 4px;
-  background: #edf5f0;
+  background: #ecf3f9;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
@@ -22,25 +22,25 @@
   align-items: center;
   gap: .5rem;
   padding: .5rem .65rem;
-  border: 1px solid #b7dacd;
+  border: 1px solid #b6d2e9;
   border-radius: 4px;
-  background: #f6fbf8;
+  background: #f5f9fc;
   cursor: pointer;
   font-size: .92rem;
-  color: #143830;
+  color: #10324c;
   transition: all 0.12s ease;
   user-select: none;
 }
 
 .test-grid label:hover {
-  background: #e2f2ea;
-  border-color: #88c0af;
+  background: #e0eef8;
+  border-color: #8bb6dc;
 }
 
 .test-grid label:has(input:checked) {
-  background: linear-gradient(180deg, #d8f1e7 0%, #c1ebd9 100%);
-  border-color: #128577;
-  color: #0b5046;
+  background: linear-gradient(180deg, #d8ebfa 0%, #bfdef5 100%);
+  border-color: #0284c7;
+  color: #035282;
   font-weight: 700;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
@@ -48,36 +48,51 @@
 .test-grid input {
   width: 1.15rem;
   height: 1.15rem;
-  accent-color: #128577;
+  accent-color: #0284c7;
 }
 
 /* --------------------------------------------------------------------------
-   Detailed Report Editor Cards & Dark Green Column Headers
+   Detailed Report Editor Cards & Dark Blue Column Headers
    -------------------------------------------------------------------------- */
 .test-card {
-  border: 1px solid #9dc4b7;
+  border: 1px solid #9ec0dd;
   border-radius: 6px;
   overflow: hidden;
-  background: #f2f8f5;
-  box-shadow: 0 2px 5px rgba(10, 50, 40, 0.06);
+  background: #f2f7fb;
+  box-shadow: 0 2px 5px rgba(10, 40, 70, 0.06);
 }
 
 .test-card-header {
-  background: linear-gradient(180deg, #246a5e 0%, #175349 50%, #11443b 51%, #154c42 100%) !important;
+  background: linear-gradient(180deg, #1d69a6 0%, #155182 50%, #0f3f66 51%, #124874 100%) !important;
   color: #ffffff !important;
   padding: 0.65rem 1rem;
-  border-bottom: 1px solid #0d3830;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid #0b3457 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
-.test-card-header .btn {
-  border-color: rgba(255, 255, 255, 0.35);
+.test-card-header .test-card-title,
+.lab-sheet-header .test-card-title {
+  color: #ffffff !important;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.test-card-header .btn,
+.lab-sheet-header .btn {
+  border-color: rgba(255, 255, 255, 0.4);
   color: #ffffff;
 }
 
 .test-card-header.cursor-pointer:hover {
-  background: linear-gradient(180deg, #2c776a 0%, #1c5e53 50%, #144e43 51%, #19574b 100%) !important;
+  background: linear-gradient(180deg, #2374b5 0%, #1a5c92 50%, #124974 51%, #165383 100%) !important;
+}
+
+.lab-sheet-header {
+  background: linear-gradient(180deg, #1d69a6 0%, #155182 50%, #0f3f66 51%, #124874 100%) !important;
+  color: #ffffff !important;
+  border-bottom: 1px solid #0b3457 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .param-table {
@@ -85,16 +100,16 @@
   font-size: 0.92rem;
 }
 
-/* Parameter Table Columns: Dark Green Windows 7 Grid Header */
+/* Parameter Table Columns: Dark Blue Windows 7 Grid Header */
 .param-table thead th {
-  background: linear-gradient(180deg, #2b7467 0%, #1d5b50 50%, #14493f 51%, #1a5347 100%) !important;
+  background: linear-gradient(180deg, #2276ba 0%, #175a91 50%, #114773 51%, #155283 100%) !important;
   color: #ffffff !important;
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border-bottom: 1px solid #0d3830 !important;
-  border-right: 1px solid #0f3d34 !important;
+  border-bottom: 1px solid #0b3457 !important;
+  border-right: 1px solid #0e3d64 !important;
   border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
   padding: 7px 10px;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
@@ -109,17 +124,17 @@
   border-right: 0 !important;
 }
 
-/* Dark Green Parameter Category Band */
+/* Dark Blue Parameter Category Band */
 .param-cat-row {
-  background: linear-gradient(180deg, #2d7568 0%, #1d594e 100%) !important;
+  background: linear-gradient(180deg, #2471b0 0%, #175382 100%) !important;
   font-weight: 700;
   color: #ffffff !important;
   font-size: 0.82rem;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
-  border-top: 1px solid #114238;
-  border-bottom: 1px solid #114238;
+  border-top: 1px solid #0f3e64;
+  border-bottom: 1px solid #0f3e64;
 }
 
 .param-cat-row td {
@@ -133,24 +148,24 @@
 
 .form-control-result {
   font-weight: 600;
-  color: #0d3027;
-  background-color: #f7fbf9;
-  border-color: #92c0b3;
+  color: #0d2c44;
+  background-color: #f8fbfe;
+  border-color: #97bedf;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
 .form-control-result:focus {
-  border-color: #128577;
-  box-shadow: 0 0 0 0.2rem rgba(18, 133, 119, 0.25);
-  background: #fcfffd;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 0.2rem rgba(2, 132, 199, 0.25);
+  background: #ffffff;
 }
 
 .test-card table tbody tr:has(input:focus) {
-  background-color: #d8efe3 !important;
+  background-color: #dbeaf8 !important;
 }
 
 .test-card table tbody tr:has(input:focus) td:first-child {
-  color: #0b5e54;
+  color: #0369a1;
   font-weight: 700;
 }
 
@@ -171,44 +186,44 @@
 
 .kbd-hint {
   font-size: 0.76rem;
-  color: #1b493e;
-  background: #e4f1ea;
-  border: 1px solid #a4caba;
+  color: #123d60;
+  background: #e3eff9;
+  border: 1px solid #a3c4df;
   border-radius: 4px;
   padding: 2px 7px;
 }
 
 .urine-remark-box,
 .test-remark-box {
-  background: #edf6f1;
-  border-top: 1px solid #b2d7cb;
+  background: #edf5fc;
+  border-top: 1px solid #b2d0ea;
 }
 
 .urine-remark-box textarea,
 .test-remark-box textarea {
-  border-color: #99c2b4;
-  background-color: #f7fbf9;
+  border-color: #9bc0df;
+  background-color: #f8fbfe;
 }
 
 .urine-remark-box textarea:focus,
 .test-remark-box textarea:focus {
-  border-color: #128577;
-  box-shadow: 0 0 0 0.2rem rgba(18, 133, 119, 0.25);
-  background: #fcfffd;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 0.2rem rgba(2, 132, 199, 0.25);
+  background: #ffffff;
 }
 
 .ready-phrase-btn {
-  background: #edf6f2;
-  border-color: #9cc2b5;
-  color: #124338;
+  background: #edf5fb;
+  border-color: #9ec0dc;
+  color: #113b5d;
   transition: all 0.15s ease;
   line-height: 1.4;
 }
 
 .ready-phrase-btn:hover {
-  background: #dbeef5;
-  border-color: #138577;
-  color: #0b5e54;
+  background: #d8e9f7;
+  border-color: #0284c7;
+  color: #0369a1;
   transform: translateY(-1px);
 }
 
@@ -222,10 +237,10 @@
 
 /* Clean Laboratory Entry Sheet */
 .lab-sheet-card {
-  border-color: #9dc4b7 !important;
+  border-color: #9ec0dd !important;
   border-radius: 6px;
   overflow: hidden;
-  background: #f2f8f5;
+  background: #f2f7fb;
 }
 
 .lab-table {
@@ -233,28 +248,61 @@
 }
 
 .lab-table thead th {
-  background: linear-gradient(180deg, #2b7467 0%, #1d5b50 50%, #14493f 51%, #1a5347 100%) !important;
+  background: linear-gradient(180deg, #2276ba 0%, #175a91 50%, #114773 51%, #155283 100%) !important;
   color: #ffffff !important;
   font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border-bottom: 2px solid #0d3830 !important;
-  border-right: 1px solid #0f3d34 !important;
+  border-bottom: 2px solid #0b3457 !important;
+  border-right: 1px solid #0e3d64 !important;
   padding: 8px 12px;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
 }
 
 .lab-table tbody tr:has(input:focus) {
-  background-color: #d8efe3 !important;
+  background-color: #dbeaf8 !important;
 }
 
 .lab-table tbody tr:has(input:focus) td:nth-child(2) {
-  color: #0b5e54;
+  color: #0369a1;
   font-weight: 700;
 }
 
 .test-remark-row {
-  background-color: #edf5f0;
-  border-bottom: 1px solid #b8dacd;
+  background-color: #ecf4fa;
+  border-bottom: 1px solid #b6d3eb;
 }
+
+/* Custom Report Test Selection Dropdown Panel */
+.test-selection-panel {
+  background: #ffffff !important;
+  border: 1px solid #9fc1de !important;
+  box-shadow: 0 10px 28px rgba(10, 40, 70, 0.22) !important;
+  border-radius: 6px;
+  animation: testPanelSlide 0.15s ease-out;
+}
+
+@keyframes testPanelSlide {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hover-test-item {
+  transition: all 0.12s ease;
+  cursor: pointer;
+  border-bottom: 1px solid #edf4fa;
+}
+
+.hover-test-item:last-child {
+  border-bottom: none;
+}
+
+.hover-test-item:hover {
+  background-color: #e1effa !important;
+}
+
+.hover-test-item.is-selected {
+  background-color: #edf6fd;
+}
+

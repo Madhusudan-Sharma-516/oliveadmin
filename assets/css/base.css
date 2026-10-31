@@ -1,67 +1,68 @@
 /* ==========================================================================
-   Base Styles & Variables — Windows 7 Medical Theme
+   Base Styles & Variables — Windows 7 Medical Aero Blue Theme
    Olive Diagnostic Raigarh
    ========================================================================== */
 
 :root {
-  /* Olive Green Color Hierarchy */
-  --olive: #128577;
-  --olive-dark: #0b5e54;
-  --olive-darker: #07433c;
-  --olive-light: #d8eee4;
-  --olive-tint: #f2f8f5;
-  --slate: #547169;
-  --leaf: #529633;
+  /* Medical Blue Color Hierarchy */
+  --blue-primary: #0284c7;
+  --blue-dark: #0369a1;
+  --blue-darker: #075985;
+  --blue-deep: #0c4a6e;
+  --blue-light: #e0f2fe;
+  --blue-tint: #f0f7fd;
+  --slate: #475569;
+  --cyan-accent: #06b6d4;
 
-  /* App Background: Gentle Light Green */
-  --body-bg: #deede4;
-  --sidebar-bg: #102632;
+  /* App Background: Gentle Medical Blue-Gray Tint */
+  --body-bg: #e2ecf5;
+  --sidebar-bg: #0c2333;
 
   /* Bootstrap 5 Theme Token Overrides (eliminating harsh pure-white) */
-  --bs-body-bg: #deede4;
-  --bs-body-color: #16362e;
-  --bs-card-bg: #f2f8f5;
-  --bs-border-color: #9dc3b6;
-  --bs-tertiary-bg: #e6f2eb;
-  --bs-secondary-bg: #eaf4ee;
+  --bs-body-bg: #e2ecf5;
+  --bs-body-color: #0f2d42;
+  --bs-card-bg: #f2f7fb;
+  --bs-border-color: #9fc1de;
+  --bs-tertiary-bg: #e5eff8;
+  --bs-secondary-bg: #ebf3fa;
 
-  /* Windows 7 Aero Gradients & Bevels */
-  --win7-header-grad: linear-gradient(180deg, #246a5e 0%, #175349 50%, #11443b 51%, #154c42 100%);
-  --win7-col-grad: linear-gradient(180deg, #2b7467 0%, #1d5b50 50%, #14493f 51%, #1a5347 100%);
-  --win7-col-hover: linear-gradient(180deg, #388a7c 0%, #256d60 50%, #1b584d 51%, #226356 100%);
-  --win7-btn-grad: linear-gradient(180deg, #2fa797 0%, #1a8b7c 50%, #11786a 51%, #168375 100%);
-  --win7-card-border: #9dc3b6;
-  --win7-header-border: #0d3830;
+  /* Windows 7 Aero Gradients & Bevels (Medical Blue Tone) */
+  --win7-header-grad: linear-gradient(180deg, #1d69a6 0%, #155182 50%, #0f3f66 51%, #124874 100%);
+  --win7-col-grad: linear-gradient(180deg, #2276ba 0%, #175a91 50%, #114773 51%, #155283 100%);
+  --win7-col-hover: linear-gradient(180deg, #328dd5 0%, #1f6ea9 50%, #155787 51%, #1c669c 100%);
+  --win7-btn-grad: linear-gradient(180deg, #2e8bda 0%, #1b6fb5 50%, #135d9a 51%, #1866a7 100%);
+  --win7-card-border: #9fc1de;
+  --win7-header-border: #0b3457;
 }
 
 body {
   background: var(--body-bg);
-  background-image: linear-gradient(180deg, #e4efe7 0%, #d8ebd0 100%);
+  background-image: linear-gradient(180deg, #e8f1f8 0%, #d8e6f3 100%);
   background-attachment: fixed;
   font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-  color: #16362e;
+  color: #0f2d42;
 }
 
 .brand-text {
-  color: var(--olive);
+  color: var(--blue-primary);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 /* --------------------------------------------------------------------------
-   Cards & Panels (Windows 7 Aero Box with Soft Mint Tint, No Harsh White)
+   Cards & Panels (Windows 7 Aero Box with Soft Blue Tint, No Harsh White)
    -------------------------------------------------------------------------- */
 .card {
-  background-color: #f2f8f5;
+  background-color: #f2f7fb;
   border: 1px solid var(--win7-card-border);
   border-radius: 5px;
-  box-shadow: 0 2px 6px rgba(12, 50, 40, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  box-shadow: 0 2px 6px rgba(12, 40, 70, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
 .card-body {
   background-color: transparent;
 }
 
-/* Card Header — Windows 7 Dark Green Glossy Title Bar */
+/* Card Header — Windows 7 Dark Blue Glossy Title Bar */
 .card-header {
   background: var(--win7-header-grad) !important;
   color: #ffffff !important;
@@ -77,17 +78,17 @@ body {
 }
 
 .card-header i {
-  color: #72f3c4;
+  color: #7dd3fc;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
 }
 
 /* --------------------------------------------------------------------------
-   Tables & Column Headers (Windows 7 ListView / Grid Aero Dark Green)
+   Tables & Column Headers (Windows 7 ListView / Grid Aero Dark Blue)
    -------------------------------------------------------------------------- */
 .table {
   --bs-table-bg: transparent;
-  --bs-table-color: #14362e;
-  border-color: #bcd9ce;
+  --bs-table-color: #0f2d42;
+  border-color: #b9d3ea;
   margin-bottom: 0;
 }
 
@@ -98,9 +99,9 @@ body {
   font-size: 0.84rem;
   letter-spacing: 0.35px;
   border: 0 !important;
-  border-right: 1px solid #0d3830 !important;
+  border-right: 1px solid #0d3860 !important;
   border-left: 1px solid rgba(255, 255, 255, 0.15) !important;
-  border-bottom: 1px solid #0c332b !important;
+  border-bottom: 1px solid #0a2d4d !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
   padding: 8px 12px;
@@ -122,21 +123,21 @@ body {
 }
 
 .table tbody tr {
-  background-color: #f5faf7;
+  background-color: #f6faff;
   transition: background-color 0.1s ease;
 }
 
 .table tbody tr:nth-of-type(even) {
-  background-color: #edf5f0;
+  background-color: #eef5fc;
 }
 
 .table-hover tbody tr:hover {
-  background-color: #dbefe4 !important;
+  background-color: #dceaf8 !important;
 }
 
 .table td {
-  border-color: #c6ded5;
-  color: #14362e;
+  border-color: #c4d9ed;
+  color: #0f2d42;
   padding: 8px 12px;
   vertical-align: middle;
 }
@@ -146,9 +147,9 @@ body {
    -------------------------------------------------------------------------- */
 .form-control,
 .form-select {
-  background-color: #f7fbf9;
-  color: #14362e;
-  border: 1px solid #9bc2b5;
+  background-color: #f8fbfe;
+  color: #0f2d42;
+  border: 1px solid #9fc1de;
   border-radius: 4px;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
   font-size: 0.92rem;
@@ -157,31 +158,31 @@ body {
 
 .form-control:focus,
 .form-select:focus {
-  background-color: #fcfffd;
-  color: #0b2b23;
-  border-color: #138576;
-  box-shadow: 0 0 0 3px rgba(19, 133, 118, 0.25), inset 0 1px 1px rgba(0, 0, 0, 0.05);
+  background-color: #ffffff;
+  color: #0b2233;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25), inset 0 1px 1px rgba(0, 0, 0, 0.05);
 }
 
 .form-control[readonly],
 .form-control:disabled,
 .form-select:disabled {
-  background-color: #e6f1eb !important;
-  border-color: #b3d5c9;
-  color: #4b6f65;
+  background-color: #e6eff7 !important;
+  border-color: #b5cde2;
+  color: #436279;
 }
 
 .form-label {
-  color: #143e34;
+  color: #0f2d42;
   font-weight: 600;
   font-size: 0.88rem;
   margin-bottom: 0.35rem;
 }
 
 .input-group-text {
-  background: linear-gradient(180deg, #edf6f1 0%, #dcedea 100%);
-  border-color: #9bc2b5;
-  color: #134e42;
+  background: linear-gradient(180deg, #edf4fb 0%, #dbe8f5 100%);
+  border-color: #9fc1de;
+  color: #114269;
   font-weight: 600;
 }
 
@@ -198,29 +199,29 @@ body {
 
 .btn-primary {
   background: var(--win7-btn-grad);
-  border-color: #0d5d51;
+  border-color: #0d4a7c;
   color: #ffffff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
-  background: linear-gradient(180deg, #37b9a7 0%, #1f9a8a 50%, #148577 51%, #199081 100%);
-  border-color: #0a4c42;
+  background: linear-gradient(180deg, #3ea0ef 0%, #207fc9 50%, #166ba8 51%, #1d76b7 100%);
+  border-color: #0a3d66;
   color: #ffffff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 8px rgba(26, 139, 124, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 8px rgba(2, 132, 199, 0.4);
 }
 
 .btn-success {
-  background: linear-gradient(180deg, #44b674 0%, #299854 50%, #1f8244 51%, #248b4a 100%);
-  border-color: #176635;
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 50%, #0369a1 51%, #0274b3 100%);
+  border-color: #075985;
   color: #ffffff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
 
 .btn-success:hover {
-  background: linear-gradient(180deg, #53c984 0%, #30a960 50%, #24924e 51%, #299e55 100%);
-  border-color: #12542a;
+  background: linear-gradient(180deg, #60a5fa 0%, #2563eb 50%, #1d4ed8 51%, #1e40af 100%);
+  border-color: #1e3a8a;
   color: #ffffff;
 }
 
@@ -238,52 +239,52 @@ body {
 }
 
 .btn-info {
-  background: linear-gradient(180deg, #2bb5d8 0%, #1493b8 50%, #0d7f9f 51%, #128ba9 100%);
-  border-color: #0a637c;
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 50%, #0369a1 51%, #0275b5 100%);
+  border-color: #075985;
   color: #ffffff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
 
 .btn-info:hover {
-  background: linear-gradient(180deg, #3ec5e9 0%, #17a4cb 50%, #108eb2 51%, #159abb 100%);
-  border-color: #064f63;
+  background: linear-gradient(180deg, #60a5fa 0%, #0284c7 50%, #0369a1 51%, #075985 100%);
+  border-color: #0c4a6e;
   color: #ffffff;
 }
 
 .btn-secondary {
-  background: linear-gradient(180deg, #7c938b 0%, #5d756d 50%, #4d645c 51%, #556c64 100%);
-  border-color: #3b5049;
+  background: linear-gradient(180deg, #788ea2 0%, #597187 50%, #475d72 51%, #50677c 100%);
+  border-color: #374a5c;
   color: #ffffff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
 
 .btn-secondary:hover {
-  background: linear-gradient(180deg, #8ba39a 0%, #688279 50%, #577067 51%, #607970 100%);
-  border-color: #31433d;
+  background: linear-gradient(180deg, #8ba1b6 0%, #637c93 50%, #52687c 51%, #5b7185 100%);
+  border-color: #2f404f;
   color: #ffffff;
 }
 
 .btn-outline-primary {
-  background-color: #edf6f2;
-  border-color: #128577;
-  color: #0b6056;
+  background-color: #eef6fc;
+  border-color: #0284c7;
+  color: #0369a1;
 }
 
 .btn-outline-primary:hover {
   background: var(--win7-btn-grad);
-  border-color: #0d5d51;
+  border-color: #0d4a7c;
   color: #ffffff;
 }
 
 .btn-outline-secondary {
-  background-color: #edf6f2;
-  border-color: #9cbdb1;
-  color: #235044;
+  background-color: #eef4f9;
+  border-color: #a4bed4;
+  color: #234764;
 }
 
 .btn-outline-secondary:hover {
-  background: linear-gradient(180deg, #7c938b 0%, #5d756d 100%);
-  border-color: #3b5049;
+  background: linear-gradient(180deg, #788ea2 0%, #597187 100%);
+  border-color: #374a5c;
   color: #ffffff;
 }
 
@@ -291,50 +292,50 @@ body {
    Global Replacement for Harsh Pure-White & Pure-Light Elements
    -------------------------------------------------------------------------- */
 .bg-white {
-  background-color: #f4f9f6 !important;
+  background-color: #f4f8fc !important;
 }
 
 .bg-light {
-  background-color: #e5f1ea !important;
+  background-color: #e6f0f8 !important;
 }
 
 .bg-light-subtle {
-  background-color: #e8f3ee !important;
+  background-color: #ebf3f9 !important;
 }
 
 .list-group-item {
-  background-color: #f5faf7;
-  border-color: #c9dfd6;
-  color: #14362e;
+  background-color: #f6faff;
+  border-color: #c8dcf0;
+  color: #0f2d42;
 }
 
 .list-group-item:hover {
-  background-color: #e3f2eb;
+  background-color: #e2eef9;
 }
 
 .dropdown-menu {
-  background-color: #f2f8f5;
-  border: 1px solid #9bc2b5;
+  background-color: #f2f7fb;
+  border: 1px solid #9fc1de;
   border-radius: 5px;
-  box-shadow: 0 4px 16px rgba(10, 45, 35, 0.16);
+  box-shadow: 0 4px 16px rgba(10, 35, 60, 0.16);
 }
 
 .dropdown-item {
-  color: #14362e;
+  color: #0f2d42;
   font-weight: 500;
 }
 
 .dropdown-item:hover,
 .dropdown-item:focus {
-  background: linear-gradient(180deg, #2ea594 0%, #177d70 100%);
+  background: linear-gradient(180deg, #2e8bda 0%, #176bb3 100%);
   color: #ffffff;
 }
 
 /* Windows 7 Keycaps */
 kbd {
-  background: linear-gradient(180deg, #f7fcf9 0%, #dbeae2 100%) !important;
-  color: #123e35 !important;
-  border: 1px solid #9dc3b6 !important;
+  background: linear-gradient(180deg, #f7fbfd 0%, #dce8f5 100%) !important;
+  color: #103859 !important;
+  border: 1px solid #9fc1de !important;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15) !important;
   font-family: inherit;
   font-weight: 700;
@@ -352,16 +353,16 @@ kbd {
 }
 
 ::-webkit-scrollbar-track {
-  background: #ddead2;
-  border: 1px solid #c8ded3;
+  background: #d8e5f2;
+  border: 1px solid #c4d7e8;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #badacf 0%, #9bc2b4 100%);
-  border: 1px solid #8ab6a6;
+  background: linear-gradient(180deg, #bad0e4 0%, #9bbcd7 100%);
+  border: 1px solid #86a9c7;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #add4c4 0%, #86b4a3 100%);
+  background: linear-gradient(180deg, #acc5db 0%, #87adc9 100%);
 }

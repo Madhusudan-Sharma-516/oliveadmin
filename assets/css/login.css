@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Login Screen & Branding Styles — Windows 7 Aero Green Theme
+   Login Screen & Branding Styles — Windows 7 Aero Blue Theme
    ========================================================================== */
 
 .login-screen {
@@ -7,18 +7,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 50% 30%, #195f54 0%, #0d3f37 55%, #072520 100%);
+  background: radial-gradient(circle at 50% 30%, #1a568c 0%, #0d375c 55%, #061c30 100%);
   padding: 1rem;
 }
 
 .login-card {
   width: 100%;
   max-width: 420px;
-  background: rgba(242, 248, 245, 0.94);
+  background: rgba(242, 247, 251, 0.94);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 8px;
-  box-shadow: 0 14px 36px rgba(4, 25, 20, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  box-shadow: 0 14px 36px rgba(4, 20, 35, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 .login-logo {
@@ -27,8 +27,8 @@
 }
 
 .logo-box {
-  background: linear-gradient(180deg, #ffffff 0%, #eef5f1 100%);
-  border: 1px solid #b8dacd;
+  background: linear-gradient(180deg, #ffffff 0%, #edf4fa 100%);
+  border: 1px solid #b6d3eb;
   border-radius: 6px;
   padding: 6px 12px;
   display: inline-flex;

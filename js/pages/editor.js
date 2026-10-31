@@ -34,7 +34,7 @@ window.toggleTestCollapse = (idx, ev) => {
     editorState[idx].collapsed = isNowHidden;
   }
   if (icon) {
-    icon.className = `bi ${isNowHidden ? 'bi-chevron-down' : 'bi-chevron-up'} fs-5 text-secondary`;
+    icon.className = `bi ${isNowHidden ? 'bi-chevron-down' : 'bi-chevron-up'} fs-5 text-white`;
   }
   if (btn) {
     btn.title = isNowHidden ? 'Expand' : 'Collapse';
@@ -61,7 +61,7 @@ window.toggleAllTests = collapsed => {
       editorState[i].collapsed = collapsed;
     }
     if (icon) {
-      icon.className = `bi ${collapsed ? 'bi-chevron-down' : 'bi-chevron-up'} fs-5 text-secondary`;
+      icon.className = `bi ${collapsed ? 'bi-chevron-down' : 'bi-chevron-up'} fs-5 text-white`;
     }
     if (btn) {
       btn.title = collapsed ? 'Expand' : 'Collapse';
@@ -182,6 +182,271 @@ window.clearTestRemark = idx => {
   }
 };
 
+/* --------------------------------------------------------------------------
+   Clear Single Test Values Feature
+   Wipes entered result values & remarks for ONE specific test
+   -------------------------------------------------------------------------- */
+window.clearSingleTestValues = (idx, testName) => {
+  const r = find(editing);
+  if (!r) return;
+  const name = testName || (r.tests && r.tests[idx] ? r.tests[idx].name : 'this test');
+  if (!confirm(`Are you sure you want to clear results for "${name}"?`)) {
+    return;
+  }
+
+  const st = editorState[idx];
+  if (st) {
+    st.remark = '';
+    if (st.isDetailed && st.params) {
+      Object.keys(st.params).forEach(paramKey => {
+        if (st.params[paramKey]) {
+          st.params[paramKey].value = '';
+        }
+      });
+    } else {
+      st.value = '';
+    }
+  }
+
+  renderEditorRows();
+  toast(`Cleared results for "${name}"`);
+};
+
+/* --------------------------------------------------------------------------
+   Clear All Values Feature
+   Wipes entered result values & remarks across all tests in current report
+   -------------------------------------------------------------------------- */
+window.clearAllEditorValues = () => {
+  const r = find(editing);
+  if (!r) return;
+  if (!confirm('Are you sure you want to clear ALL entered test result values and remarks?')) {
+    return;
+  }
+
+  // Clear state
+  Object.keys(editorState).forEach(idx => {
+    const st = editorState[idx];
+    if (!st) return;
+    st.remark = '';
+    if (st.isDetailed && st.params) {
+      Object.keys(st.params).forEach(paramKey => {
+        if (st.params[paramKey]) {
+          st.params[paramKey].value = '';
+        }
+      });
+    } else {
+      st.value = '';
+    }
+  });
+
+  // Clear general remarks
+  if ($('edRemarks')) $('edRemarks').value = '';
+  r.remarks = '';
+
+  // Re-render editor
+  renderEditorRows();
+  toast('All test values cleared');
+};
+
+/* --------------------------------------------------------------------------
+   Add More Tests to Existing Report Feature
+   Allows appending any test from catalog/templates into the active report
+   -------------------------------------------------------------------------- */
+window.openAddTestModal = () => {
+  const r = find(editing);
+  if (!r) {
+    toast('No report is currently open in editor');
+    return;
+  }
+  if ($('edAddTestPatientName')) {
+    $('edAddTestPatientName').textContent = `${r.name} (#${r.labNo})`;
+  }
+  if ($('edAddTestSearch')) {
+    $('edAddTestSearch').value = '';
+  }
+  renderEditorAddTestList();
+  const modalEl = $('edAddTestModal');
+  if (modalEl && window.bootstrap?.Modal) {
+    const m = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    m.show();
+    setTimeout(() => $('edAddTestSearch')?.focus(), 250);
+  }
+};
+
+window.renderEditorAddTestList = () => {
+  const listEl = $('edAddTestList');
+  if (!listEl) return;
+  const r = find(editing);
+  if (!r) return;
+
+  const q = ($('edAddTestSearch')?.value || '').trim().toLowerCase();
+  const currentTestNames = new Set((r.tests || []).map(t => (t.name || '').trim().toLowerCase()));
+
+  const allTests = typeof getAllSearchableTests === 'function' ? getAllSearchableTests() : [];
+  const filtered = allTests.filter(t => {
+    if (!q) return true;
+    const nameLower = (t.name || '').toLowerCase();
+    if (nameLower.includes(q)) return true;
+    const tmpl = typeof findTemplate === 'function' ? findTemplate(t.name) : null;
+    if (tmpl && tmpl.match && tmpl.match.some(m => m.includes(q) || q.includes(m))) return true;
+    if (t.dept && t.dept.toLowerCase().includes(q)) return true;
+    return false;
+  });
+
+  const counterEl = $('edAddTestCounter');
+  if (counterEl) {
+    counterEl.textContent = q ? `Found ${filtered.length} tests matching "${q}"` : `Available Tests (${filtered.length})`;
+  }
+
+  if (!filtered.length) {
+    listEl.innerHTML = `
+      <div class="text-center text-muted py-4">
+        <i class="bi bi-search fs-3 text-secondary d-block mb-1"></i>
+        <div class="fw-semibold">No tests matching "${esc(q)}"</div>
+        <div class="small mt-1 text-muted">Try searching "CBC", "KFT", "LFT", "Lipid", "Sugar", "Urine", etc.</div>
+      </div>
+    `;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(t => {
+    const isAlreadyInReport = currentTestNames.has(t.name.trim().toLowerCase());
+    const tmpl = typeof findTemplate === 'function' ? findTemplate(t.name) : null;
+    const deptText = t.dept || tmpl?.subtitle || '';
+    const paramCount = tmpl?.items ? tmpl.items.filter(x => !x.isHeader).length : null;
+
+    return `
+      <div class="d-flex justify-content-between align-items-center p-2 rounded hover-test-item ${isAlreadyInReport ? 'is-selected' : ''}"
+           style="border-bottom: 1px solid #edf4fa;">
+        <div class="me-2 text-truncate">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fw-semibold text-dark text-truncate">${esc(t.name)}</span>
+            ${paramCount ? `<span class="badge bg-light text-primary border small" style="font-size:0.7rem;">${paramCount} params</span>` : ''}
+          </div>
+          <div class="d-flex align-items-center gap-2 small text-muted">
+            <span class="fw-bold text-primary">₹${t.price}</span>
+            ${deptText ? `<span>&middot;</span><span class="text-truncate">${esc(deptText)}</span>` : ''}
+          </div>
+        </div>
+        ${isAlreadyInReport ? `
+          <button type="button" class="btn btn-sm btn-light border text-success text-nowrap px-3 py-1" disabled>
+            <i class="bi bi-check2-circle me-1"></i>In Report
+          </button>
+        ` : `
+          <button type="button" class="btn btn-sm btn-primary text-nowrap px-3 py-1" 
+                  onclick="addTestToEditor('${esc(t.name)}', ${t.price});">
+            <i class="bi bi-plus-lg me-1"></i>Add
+          </button>
+        `}
+      </div>
+    `;
+  }).join('');
+};
+
+window.addTestToEditor = (testName, price) => {
+  snapshotEditorInputs();
+  const r = find(editing);
+  if (!r) return;
+
+  r.tests = r.tests || [];
+  const exists = r.tests.some(t => t.name.trim().toLowerCase() === testName.trim().toLowerCase());
+  if (exists) {
+    toast(`Test "${testName}" is already in this report`);
+    return;
+  }
+
+  // Add test to report
+  r.tests.push({
+    name: testName,
+    price: Number(price) || 0
+  });
+
+  // Re-calculate report total
+  r.total = r.tests.reduce((sum, t) => sum + (Number(t.price) || 0), 0);
+  if ($('edTotal')) $('edTotal').value = r.total;
+
+  // Initialize editorState for the newly added test
+  const newIdx = r.tests.length - 1;
+  const tmpl = typeof findTemplate === 'function' ? findTemplate(testName) : null;
+  if (tmpl) {
+    editorState[newIdx] = {
+      isDetailed: true,
+      templateId: tmpl.id,
+      params: {},
+      method: tmpl.method || '',
+      remark: tmpl.remark || '',
+      collapsed: false
+    };
+  } else {
+    const paramDef = typeof findTestParameter === 'function' ? findTestParameter(testName) : null;
+    editorState[newIdx] = {
+      isDetailed: false,
+      value: paramDef?.defaultVal || '',
+      unit: paramDef?.unit || '',
+      range: paramDef?.range || '',
+      remark: '',
+      collapsed: false
+    };
+  }
+
+  // Persist updated report structure
+  persist();
+  renderEditorRows();
+  renderEditorAddTestList();
+  toast(`Test "${testName}" added to report`);
+
+  // Auto-focus the newly added test
+  setTimeout(() => {
+    const card = document.getElementById(`testCardBody_${newIdx}`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const firstInp = card.querySelector('input.form-control-result:not([readonly]):not([disabled])');
+      if (firstInp) firstInp.focus();
+    }
+  }, 150);
+};
+
+window.removeTestFromEditor = idx => {
+  snapshotEditorInputs();
+  const r = find(editing);
+  if (!r || !r.tests || !r.tests[idx]) return;
+
+  const tName = r.tests[idx].name;
+  if (!confirm(`Are you sure you want to remove "${tName}" from this report?`)) {
+    return;
+  }
+
+  r.tests.splice(idx, 1);
+  r.total = r.tests.reduce((sum, t) => sum + (Number(t.price) || 0), 0);
+  if ($('edTotal')) $('edTotal').value = r.total;
+
+  // Clean saved results for removed test
+  if (r.results && r.results[tName]) {
+    delete r.results[tName];
+  }
+
+  // Re-index editorState
+  const newEditorState = {};
+  r.tests.forEach((t, i) => {
+    const oldIdx = i >= idx ? i + 1 : i;
+    if (editorState[oldIdx]) {
+      newEditorState[i] = editorState[oldIdx];
+    } else {
+      const tmpl = typeof findTemplate === 'function' ? findTemplate(t.name) : null;
+      if (tmpl) {
+        newEditorState[i] = { isDetailed: true, templateId: tmpl.id, params: {}, collapsed: false };
+      } else {
+        newEditorState[i] = { isDetailed: false, value: '', unit: '', range: '', remark: '', collapsed: false };
+      }
+    }
+  });
+  editorState = newEditorState;
+
+  persist();
+  renderEditorRows();
+  toast(`Removed "${tName}" from report`);
+};
+
 window.calculateLipidProfile = idx => {
   const st = editorState[idx];
   if (!st) return;
@@ -243,7 +508,7 @@ window.calculateBiochemistry = idx => {
   const st = editorState[idx];
   if (!st) return;
   const tmpl = TEST_TEMPLATES[st.templateId] || findTemplate((find(editing)?.tests?.[idx] || {}).name);
-  if (!tmpl || tmpl.id !== 'biochemistry') return;
+  if (!tmpl || (tmpl.id !== 'biochemistry' && !tmpl.id.includes('lft') && !tmpl.id.includes('bilirubin') && !tmpl.id.includes('protein'))) return;
 
   st.params = st.params || {};
   const cardBody = $('testCardBody_' + idx);
@@ -264,19 +529,30 @@ window.calculateBiochemistry = idx => {
     }
   };
 
-  const totBil = parseFloat(st.params['TOTAL']?.value);
-  const dirBil = parseFloat(st.params['DIRECT']?.value);
+  const totBilVal = st.params['TOTAL']?.value ?? st.params['TOTAL BILIRUBIN']?.value ?? st.params['Total Bilirubin']?.value;
+  const dirBilVal = st.params['DIRECT']?.value ?? st.params['DIRECT BILIRUBIN']?.value ?? st.params['Direct Bilirubin']?.value;
+  const totBil = parseFloat(totBilVal);
+  const dirBil = parseFloat(dirBilVal);
   if (!isNaN(totBil) && !isNaN(dirBil)) {
-    updateField('INDIRECT', Math.max(0, totBil - dirBil).toFixed(2));
+    const indirectVal = Math.max(0, totBil - dirBil).toFixed(2);
+    if (st.params['INDIRECT'] !== undefined || tmpl.id === 'biochemistry') updateField('INDIRECT', indirectVal);
+    if (st.params['INDIRECT BILIRUBIN'] !== undefined) updateField('INDIRECT BILIRUBIN', indirectVal);
+    if (st.params['Indirect Bilirubin'] !== undefined) updateField('Indirect Bilirubin', indirectVal);
   }
 
-  const totProt = parseFloat(st.params['TOTAL PROTEIN']?.value);
-  const alb = parseFloat(st.params['ALBUMIN']?.value);
+  const totProtVal = st.params['TOTAL PROTEIN']?.value ?? st.params['Total Protein']?.value;
+  const albVal = st.params['ALBUMIN']?.value ?? st.params['Albumin']?.value;
+  const totProt = parseFloat(totProtVal);
+  const alb = parseFloat(albVal);
   if (!isNaN(totProt) && !isNaN(alb)) {
     const glob = Math.max(0, totProt - alb);
-    updateField('GLOBULIN', glob.toFixed(2));
+    const globVal = glob.toFixed(2);
+    if (st.params['GLOBULIN'] !== undefined || tmpl.id === 'biochemistry') updateField('GLOBULIN', globVal);
+    if (st.params['Globulin'] !== undefined) updateField('Globulin', globVal);
     if (glob > 0) {
-      updateField('A/G RATIO', (alb / glob).toFixed(2));
+      const agVal = (alb / glob).toFixed(2);
+      if (st.params['A/G RATIO'] !== undefined || tmpl.id === 'biochemistry') updateField('A/G RATIO', agVal);
+      if (st.params['A/G Ratio'] !== undefined) updateField('A/G Ratio', agVal);
     }
   }
 };
@@ -305,16 +581,17 @@ function renderEditorRows() {
 
       return `
         <tr id="testRow_${i}">
-          <td class="text-center text-muted fw-semibold align-middle" style="width:5%">${i + 1}</td>
-          <td class="fw-bold text-dark align-middle" style="width:32%">
-            <span>${esc(t.name)}</span>
+          <td class="text-center text-muted fw-semibold align-middle" style="width:4%">${i + 1}</td>
+          <td class="align-middle" style="width:30%">
+            <div class="fw-bold text-dark fs-6">${esc(t.name)}</div>
+            <div class="small text-muted" style="font-size:0.75rem;">Standard Investigation</div>
           </td>
           <td style="width:25%">
             <input class="form-control form-control-sm form-control-result ${isAbnormal ? 'is-abnormal-input' : ''}" 
                    data-test-idx="${i}" data-simple="true" data-f="value" 
                    value="${esc(st.value || '')}" placeholder="Enter result...">
           </td>
-          <td style="width:17%">
+          <td style="width:16%">
             <input class="form-control form-control-sm bg-light" 
                    data-test-idx="${i}" data-simple="true" data-f="unit" 
                    value="${esc(st.unit || '')}" placeholder="Unit">
@@ -324,12 +601,26 @@ function renderEditorRows() {
                    data-test-idx="${i}" data-simple="true" data-f="range" 
                    value="${esc(st.range || '')}" placeholder="Reference Range">
           </td>
-          <td class="text-center align-middle" style="width:6%">
-            <button type="button" class="btn btn-sm ${hasRemark ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2" 
-                    id="testRemarkBtn_${i}" onclick="toggleTestRemark(${i})" 
-                    title="${hasRemark ? 'Edit Remark' : 'Add Remark'}">
-              <i class="bi ${hasRemark ? 'bi-chat-left-text-fill' : 'bi-chat-left'}"></i>
-            </button>
+          <td class="text-center align-middle" style="width:10%">
+            <div class="d-inline-flex gap-1">
+              <button type="button" class="btn btn-sm ${hasRemark ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2" 
+                      id="testRemarkBtn_${i}" onclick="toggleTestRemark(${i})" 
+                      title="${hasRemark ? 'Edit Remark' : 'Add Remark'}">
+                <i class="bi ${hasRemark ? 'bi-chat-left-text-fill' : 'bi-chat-left'}"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" 
+                      onclick="clearSingleTestValues(${i}, '${esc(t.name)}')" 
+                      title="Clear results for ${esc(t.name)}">
+                <i class="bi bi-eraser"></i>
+              </button>
+              ${tests.length > 1 ? `
+                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" 
+                        onclick="removeTestFromEditor(${i})" 
+                        title="Remove ${esc(t.name)} from report">
+                  <i class="bi bi-trash"></i>
+                </button>
+              ` : ''}
+            </div>
           </td>
         </tr>
         <tr class="test-remark-row ${hasRemark ? '' : 'd-none'}" id="testRemarkRow_${i}">
@@ -354,26 +645,26 @@ function renderEditorRows() {
 
     const output = `
       <div class="card shadow-sm mb-3 border lab-sheet-card">
-        <div class="card-header bg-white py-2 px-3 d-flex justify-content-between align-items-center">
+        <div class="card-header test-card-header lab-sheet-header py-2 px-3 d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-table text-primary"></i>
-            <span class="fw-bold text-dark">Routine Investigations</span>
-            <span class="badge bg-secondary-subtle text-secondary border small">${singleGroup.length} test${singleGroup.length > 1 ? 's' : ''}</span>
+            <i class="bi bi-card-checklist text-info fs-5"></i>
+            <span class="test-card-title fs-6">Individual Investigations</span>
+            <span class="badge bg-white text-primary fw-semibold border-0 px-2 py-1">${singleGroup.length} test${singleGroup.length > 1 ? 's' : ''}</span>
           </div>
-          <span class="small text-muted d-none d-md-inline">
-            <i class="bi bi-keyboard text-primary me-1"></i>Press <kbd class="bg-white text-dark border px-1">Enter</kbd> to move to next test
+          <span class="small text-white-50 d-none d-md-inline">
+            <i class="bi bi-keyboard text-info me-1"></i>Press <kbd class="bg-white text-dark border px-1">Enter</kbd> to move to next test
           </span>
         </div>
         <div class="table-responsive">
           <table class="table table-hover table-bordered table-sm align-middle mb-0 lab-table">
             <thead>
               <tr>
-                <th class="text-center" style="width:5%">#</th>
-                <th style="width:32%">Investigation / Parameter</th>
+                <th class="text-center" style="width:4%">#</th>
+                <th style="width:30%">Investigation / Parameter</th>
                 <th style="width:25%">Result <span class="badge bg-primary text-white ms-1">Fill here</span></th>
-                <th style="width:17%">Unit</th>
+                <th style="width:16%">Unit</th>
                 <th style="width:15%">Reference Range</th>
-                <th class="text-center" style="width:6%">Remark</th>
+                <th class="text-center" style="width:10%">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -410,10 +701,12 @@ function renderEditorRows() {
       const rangeStatus = checkValueRange(pVal, item.range);
       const isAbnormal = rangeStatus === 'high' || rangeStatus === 'low' || rangeStatus === 'abnormal';
       return `<tr>
-        <td class="${item.indent ? 'param-indent' : 'fw-semibold'}">${esc(item.name)}</td>
+        <td class="${item.indent ? 'param-indent fw-medium text-dark' : 'fw-bold text-dark'}" style="font-size:0.94rem;">
+          ${item.indent ? '<i class="bi bi-dash text-secondary me-1"></i>' : ''}${esc(item.name)}
+        </td>
         <td><input class="form-control form-control-sm form-control-result ${isAbnormal ? 'is-abnormal-input' : ''}" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="value" value="${esc(pVal)}" placeholder="Enter result..."></td>
-        <td><input class="form-control form-control-sm bg-light text-muted border-0" readonly tabindex="-1" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="unit" value="${esc(item.unit)}"></td>
-        <td><input class="form-control form-control-sm bg-light text-muted border-0" readonly tabindex="-1" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="range" value="${esc(item.range)}"></td>
+        <td><input class="form-control form-control-sm bg-light text-dark fw-medium border-0" readonly tabindex="-1" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="unit" value="${esc(item.unit)}"></td>
+        <td><input class="form-control form-control-sm bg-light text-dark fw-medium border-0" readonly tabindex="-1" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="range" value="${esc(item.range)}"></td>
       </tr>`;
     }).join('');
 
@@ -481,19 +774,29 @@ function renderEditorRows() {
       `;
     }
 
+    const displayTitle = (t.name && tmpl.title && t.name.toLowerCase() !== tmpl.title.toLowerCase())
+      ? `${esc(t.name)} — ${esc(tmpl.title)}`
+      : esc(tmpl.title || t.name);
+
     html += `
       <div class="card shadow-sm mb-3 border test-card">
-        <div class="card-header bg-white py-2 px-3 d-flex justify-content-between align-items-center cursor-pointer" onclick="toggleTestCollapse(${i})">
+        <div class="card-header test-card-header py-2 px-3 d-flex justify-content-between align-items-center cursor-pointer" onclick="toggleTestCollapse(${i})">
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            <i class="bi bi-folder2-open text-primary"></i>
-            <span class="fw-bold text-dark">${esc(tmpl.title || t.name)}</span>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle small fw-normal">${tmpl.items.filter(x => !x.isHeader).length} parameters</span>
-            ${tmpl.subtitle ? `<span class="small text-muted d-none d-lg-inline">&middot; ${esc(tmpl.subtitle)}</span>` : ''}
+            <i class="bi bi-folder2-open text-info fs-5"></i>
+            <span class="test-card-title fs-6">${displayTitle}</span>
+            <span class="badge bg-white text-primary fw-semibold border-0 px-2 py-1">${tmpl.items.filter(x => !x.isHeader).length} parameters</span>
+            ${tmpl.subtitle ? `<span class="small text-white-50 d-none d-lg-inline">&middot; ${esc(tmpl.subtitle)}</span>` : ''}
           </div>
           <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-light text-muted border small d-none d-sm-inline" id="testStatusBadge_${i}">${isCollapsed ? 'Collapsed' : 'Open'}</span>
-            <button type="button" class="btn btn-sm btn-light border-0 rounded-circle expand-btn" id="testExpandBtn_${i}" title="${isCollapsed ? 'Expand' : 'Collapse'}" onclick="event.stopPropagation(); toggleTestCollapse(${i});">
-              <i id="testChevron_${i}" class="bi ${isCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'} fs-5 text-secondary"></i>
+            <button type="button" class="btn btn-sm btn-outline-light border py-1 px-2 text-white" 
+                    title="Clear entered results for ${esc(t.name)}" 
+                    onclick="event.stopPropagation(); clearSingleTestValues(${i}, '${esc(t.name)}');">
+              <i class="bi bi-eraser me-1"></i><span class="d-none d-md-inline">Clear Test</span>
+            </button>
+            ${tests.length > 1 ? `<button type="button" class="btn btn-sm btn-outline-light border-0 py-1 px-2 text-white-50 hover-danger" title="Remove this test from report" onclick="event.stopPropagation(); removeTestFromEditor(${i});"><i class="bi bi-trash3 text-white"></i></button>` : ''}
+            <span class="badge bg-light bg-opacity-25 text-white border-0 small d-none d-sm-inline" id="testStatusBadge_${i}">${isCollapsed ? 'Collapsed' : 'Open'}</span>
+            <button type="button" class="btn btn-sm btn-light bg-opacity-25 border-0 rounded-circle expand-btn text-white" id="testExpandBtn_${i}" title="${isCollapsed ? 'Expand' : 'Collapse'}" onclick="event.stopPropagation(); toggleTestCollapse(${i});">
+              <i id="testChevron_${i}" class="bi ${isCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'} fs-5 text-white"></i>
             </button>
           </div>
         </div>
@@ -664,12 +967,12 @@ function initEditorEvents() {
 
       if (f === 'value') {
         const tmpl = TEST_TEMPLATES[editorState[idx].templateId] || findTemplate((find(editing)?.tests?.[idx] || {}).name);
-        if (tmpl && tmpl.id === 'lipid') {
-          if (p === 'CHOLESTEROL' || p === 'TRIGLYCERIDES' || p === 'HDL') {
+        if (tmpl && (tmpl.id === 'lipid' || tmpl.id.includes('lipid'))) {
+          if (p === 'CHOLESTEROL' || p === 'TRIGLYCERIDES' || p === 'HDL' || p.includes('Cholesterol') || p.includes('Triglycerides')) {
             calculateLipidProfile(idx);
           }
-        } else if (tmpl && tmpl.id === 'biochemistry') {
-          if (p === 'TOTAL' || p === 'DIRECT' || p === 'TOTAL PROTEIN' || p === 'ALBUMIN') {
+        } else if (tmpl && (tmpl.id === 'biochemistry' || tmpl.id.includes('lft') || tmpl.id.includes('bilirubin') || tmpl.id.includes('protein'))) {
+          if (p.toUpperCase().includes('TOTAL') || p.toUpperCase().includes('DIRECT') || p.toUpperCase().includes('PROTEIN') || p.toUpperCase().includes('ALBUMIN')) {
             calculateBiochemistry(idx);
           }
         }
@@ -805,11 +1108,12 @@ window.openEditor = labNo => {
           remark: tmpl.remark || ''
         };
       } else {
+        const paramDef = typeof findTestParameter === 'function' ? findTestParameter(t.name) : null;
         editorState[i] = {
           isDetailed: false,
-          value: '',
-          unit: '',
-          range: '',
+          value: paramDef?.defaultVal || '',
+          unit: paramDef?.unit || '',
+          range: paramDef?.range || '',
           remark: ''
         };
       }
@@ -821,8 +1125,8 @@ window.openEditor = labNo => {
 
   (r.tests || []).forEach((t, i) => {
     const tmpl = TEST_TEMPLATES[editorState[i]?.templateId] || findTemplate(t.name);
-    if (tmpl?.id === 'lipid') calculateLipidProfile(i);
-    else if (tmpl?.id === 'biochemistry') calculateBiochemistry(i);
+    if (tmpl?.id === 'lipid' || tmpl?.id?.includes('lipid')) calculateLipidProfile(i);
+    else if (tmpl?.id === 'biochemistry' || tmpl?.id?.includes('lft') || tmpl?.id?.includes('bilirubin') || tmpl?.id?.includes('protein')) calculateBiochemistry(i);
   });
 
   if ($('edTotal')) $('edTotal').value = r.total;

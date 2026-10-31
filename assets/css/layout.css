@@ -1,28 +1,28 @@
 /* ==========================================================================
    Desktop Software Layout Styles (Top Ribbon, Horizontal Tabs, Full Width)
-   Windows 7 Theme — Olive Diagnostic Raigarh
+   Windows 7 Aero Blue Theme — Olive Diagnostic Raigarh
    ========================================================================== */
 
 .app-shell {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--body-bg, #deede4);
-  background-image: linear-gradient(180deg, #e4efe7 0%, #d8ebd0 100%);
+  background: var(--body-bg, #e2ecf5);
+  background-image: linear-gradient(180deg, #e8f1f8 0%, #d8e6f3 100%);
   background-attachment: fixed;
 }
 
 /* --------------------------------------------------------------------------
-   1. Pinned Top Unit (Windows 7 Aero Glass Header & Tabs)
+   1. Pinned Top Unit (Windows 7 Aero Glass Blue Header & Tabs)
    -------------------------------------------------------------------------- */
 .desktop-top-fixed-bar {
   position: sticky;
   top: 0;
   z-index: 1040;
   width: 100%;
-  background: linear-gradient(180deg, #142e39 0%, #0b1c24 100%);
-  box-shadow: 0 3px 12px rgba(5, 25, 20, 0.28);
-  border-bottom: 1px solid #135245;
+  background: linear-gradient(180deg, #0e2a3f 0%, #071927 100%);
+  box-shadow: 0 3px 12px rgba(5, 20, 35, 0.32);
+  border-bottom: 1px solid #144970;
 }
 
 /* Desktop Title Bar */
@@ -43,8 +43,8 @@
 }
 
 .desktop-logo-box {
-  background: linear-gradient(180deg, #ffffff 0%, #edf6f2 100%);
-  border: 1px solid #b8dacd;
+  background: linear-gradient(180deg, #ffffff 0%, #edf4fa 100%);
+  border: 1px solid #b6d3eb;
   border-radius: 5px;
   padding: 3px 8px;
   display: inline-flex;
@@ -72,7 +72,7 @@
 
 .desktop-subtitle {
   font-size: 0.7rem;
-  color: #6ee7b7;
+  color: #38bdf8;
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -85,23 +85,23 @@
 }
 
 .desktop-clock {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.08);
   padding: 0.35rem 0.75rem;
   border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   font-size: 0.82rem;
-  color: #a7f3d0;
+  color: #bae6fd;
   font-family: 'Consolas', monospace;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .desktop-user-badge {
-  background: linear-gradient(180deg, rgba(18, 133, 119, 0.35) 0%, rgba(11, 94, 84, 0.35) 100%);
+  background: linear-gradient(180deg, rgba(2, 132, 199, 0.35) 0%, rgba(3, 105, 161, 0.35) 100%);
   padding: 0.35rem 0.85rem;
   border-radius: 16px;
   font-size: 0.84rem;
-  color: #e6f7f2;
-  border: 1px solid rgba(110, 231, 183, 0.45);
+  color: #f0f9ff;
+  border: 1px solid rgba(56, 189, 248, 0.45);
   display: inline-flex;
   align-items: center;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -115,11 +115,11 @@
 }
 
 /* --------------------------------------------------------------------------
-   2. Desktop Horizontal Tabs Ribbon (Windows 7 Aero Gloss Tabs)
+   2. Desktop Horizontal Tabs Ribbon (Windows 7 Aero Blue Gloss Tabs)
    -------------------------------------------------------------------------- */
 .desktop-nav-ribbon {
-  background: linear-gradient(180deg, #16343e 0%, #0e232b 100%);
-  border-bottom: 2px solid #128577;
+  background: linear-gradient(180deg, #102e45 0%, #091e2e 100%);
+  border-bottom: 2px solid #0284c7;
   padding: 0 0.75rem;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
@@ -144,7 +144,7 @@
 /* Individual Tab Item - Windows 7 Glass Tab */
 .desktop-tabs-container .nav-link,
 .desktop-tab-item {
-  color: #cad8d2;
+  color: #cbdbe7;
   padding: 0.65rem 1.25rem;
   font-size: 0.88rem;
   font-weight: 600;
@@ -167,16 +167,16 @@
 }
 
 .desktop-tabs-container .nav-link:hover {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.05) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.06) 100%);
   color: #ffffff;
 }
 
-/* Active Tab: Vibrant Windows 7 Aero Green Glass */
+/* Active Tab: Vibrant Windows 7 Aero Blue Glass */
 .desktop-tabs-container .nav-link.active {
-  background: linear-gradient(180deg, #2fa797 0%, #177d70 50%, #0f685c 51%, #157366 100%) !important;
+  background: linear-gradient(180deg, #3aa0ea 0%, #1b73be 50%, #125ea0 51%, #176bb3 100%) !important;
   color: #ffffff !important;
-  border-right-color: #0d544a !important;
-  border-left-color: #0d544a !important;
+  border-right-color: #0b4573 !important;
+  border-left-color: #0b4573 !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38) !important;
   font-weight: 700;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
@@ -194,13 +194,13 @@
 
 /* Windows 7 Command Bar / Header Strip */
 .page-header-strip {
-  background: linear-gradient(180deg, #edf6f1 0%, #dbece2 100%);
-  border-bottom: 1px solid #a8cabb;
-  box-shadow: 0 1px 3px rgba(10, 50, 40, 0.06);
+  background: linear-gradient(180deg, #edf4fb 0%, #dbe7f4 100%);
+  border-bottom: 1px solid #a8c4de;
+  box-shadow: 0 1px 3px rgba(10, 35, 60, 0.06);
 }
 
 .page-header-strip h2 {
-  color: #113c32 !important;
+  color: #0d3452 !important;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
