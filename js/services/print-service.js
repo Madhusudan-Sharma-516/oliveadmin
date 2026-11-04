@@ -69,6 +69,11 @@ function getReportHtml(r) {
   const testsList = r.tests || [];
   if (!testsList.length) return '';
 
+  const signImg = r.signature || (typeof getActiveDefaultSignature === 'function' ? getActiveDefaultSignature() : (typeof DEFAULT_DOCTOR_SIGNATURE !== 'undefined' ? DEFAULT_DOCTOR_SIGNATURE : ''));
+  const docName = r.signDoctorName || (typeof getActiveDefaultDoctorName === 'function' ? getActiveDefaultDoctorName() : (typeof DEFAULT_DOCTOR_NAME !== 'undefined' ? DEFAULT_DOCTOR_NAME : 'Dr. Hanish Kumar Chawda, MBBS, MD'));
+  const docDegree = r.signDoctorDegree || (typeof getActiveDefaultDoctorDegree === 'function' ? getActiveDefaultDoctorDegree() : (typeof DEFAULT_DOCTOR_DEGREE !== 'undefined' ? DEFAULT_DOCTOR_DEGREE : 'Pathologist, Olive Diagnostics, Raigarh'));
+  const showSignature = !r.hideSignature;
+
   return testsList.map((t, pageIdx) => {
     const pageNum = pageIdx + 1;
     const x = (r.results || {})[t.name] || {};
@@ -90,12 +95,11 @@ function getReportHtml(r) {
         const u = p.unit !== undefined && p.unit !== '' ? p.unit : item.unit;
         const rng = p.range !== undefined && p.range !== '' ? p.range : item.range;
         const rangeStatus = checkValueRange(val, rng);
-        const isAbnormal = rangeStatus === 'high' || rangeStatus === 'low' || rangeStatus === 'abnormal';
         const indentStyle = item.indent ? 'padding-left: 16px;' : '';
-        const valDisplay = isAbnormal ? `
-          <span style="font-weight: 900; color: #b91c1c; border-bottom: 1.5px solid #b91c1c; padding-bottom: 1px; display: inline-block;">
-            ${esc(val)} <span style="font-size: 9.5px; font-weight: 800; color: #b91c1c; border: 1px solid #b91c1c; padding: 0 2px; border-radius: 2px; margin-left: 2px; vertical-align: middle;">${rangeStatus === 'high' ? 'H' : rangeStatus === 'low' ? 'L' : '*'}</span>
-          </span>` : `<span>${esc(val)}</span>`;
+        const flag = (val !== '' && rangeStatus === 'high') ? ' H' : (val !== '' && rangeStatus === 'low') ? ' L' : '';
+        const valDisplay = flag ? `
+          <span style="font-weight: 900; color: #b91c1c;">${esc(val)}${flag}</span>
+        ` : `<span>${esc(val)}</span>`;
         return `
           <tr style="line-height: 1.45; border-bottom: 1px solid #f1f5f9;">
             <td style="width: 44%; padding: 2px 0; ${indentStyle}">${esc(item.name)}</td>
@@ -110,11 +114,10 @@ function getReportHtml(r) {
       const u = x.unit || '';
       const rng = x.range || '';
       const rangeStatus = checkValueRange(val, rng);
-      const isAbnormal = rangeStatus === 'high' || rangeStatus === 'low' || rangeStatus === 'abnormal';
-      const valDisplay = isAbnormal ? `
-        <span style="font-weight: 900; color: #b91c1c; border-bottom: 1.5px solid #b91c1c; padding-bottom: 1px; display: inline-block;">
-          ${esc(val)} <span style="font-size: 9.5px; font-weight: 800; color: #b91c1c; border: 1px solid #b91c1c; padding: 0 2px; border-radius: 2px; margin-left: 2px; vertical-align: middle;">${rangeStatus === 'high' ? 'H' : rangeStatus === 'low' ? 'L' : '*'}</span>
-        </span>` : `<span>${esc(val)}</span>`;
+      const flag = (val !== '' && rangeStatus === 'high') ? ' H' : (val !== '' && rangeStatus === 'low') ? ' L' : '';
+      const valDisplay = flag ? `
+        <span style="font-weight: 900; color: #b91c1c;">${esc(val)}${flag}</span>
+      ` : `<span>${esc(val)}</span>`;
       rowsHtml = `
         <tr style="line-height: 1.5; border-bottom: 1px solid #f1f5f9;">
           <td style="width: 44%; padding: 3px 0; font-weight: 500;">${esc(t.name)}</td>
@@ -208,10 +211,17 @@ function getReportHtml(r) {
 
         <div class="report-bottom-content" style="margin-top: auto; padding-top: 8px; page-break-inside: avoid; break-inside: avoid;">
           <div style="border-top: 1.5px solid #000; padding-top: 6px; display: flex; justify-content: space-between; align-items: flex-end; font-size: 12px;">
-            <div style="font-weight: bold; font-style: italic;">Checked By</div>
+            <div style="font-weight: bold; font-style: italic; padding-bottom: 4px;">Checked By</div>
             <div style="text-align: right; line-height: 1.25;">
-              <b>Dr. Hanish Kumar Chawda, MBBS, MD</b><br>
-              <span style="font-size: 11px; color: #222;">Pathologist, Olive Diagnostics, Raigarh</span>
+              ${showSignature && signImg ? `
+                <div style="min-height: 48px; max-height: 48px; display: flex; justify-content: flex-end; align-items: flex-end; margin-bottom: 2px;">
+                  <img src="${signImg}" alt="Doctor Signature" style="max-height: 46px; max-width: 140px; object-fit: contain; mix-blend-mode: multiply;" />
+                </div>
+              ` : `
+                <div style="height: 48px;"></div>
+              `}
+              <b>${esc(docName)}</b><br>
+              <span style="font-size: 11px; color: #222;">${esc(docDegree)}</span>
             </div>
           </div>
         </div>

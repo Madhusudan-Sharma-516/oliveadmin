@@ -3,7 +3,7 @@
    Generates downloadable multi-page A4 PDF lab reports via html2pdf.js
    ========================================================================== */
 
-function downloadReportPdf(r) {
+async function downloadReportPdf(r) {
   if (!r && typeof saveEditor === 'function') {
     r = saveEditor();
   }
@@ -11,7 +11,7 @@ function downloadReportPdf(r) {
   const html = getReportHtml(r);
   if (!html) return toast('No tests to print');
 
-  // Loading indicator overlay
+  // Loading overlay
   const overlay = document.createElement('div');
   overlay.id = 'pdfOverlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999999;display:flex;align-items:center;justify-content:center;';
@@ -23,13 +23,28 @@ function downloadReportPdf(r) {
   `;
   document.body.appendChild(overlay);
 
-  // Hidden render container
+  // Render container: overlay के ठीक नीचे, screen के अंदर, पूरा visible
   const container = document.createElement('div');
   container.id = 'pdfRenderWrap';
-  container.className = 'pdf-render-wrap';
-  container.style.position = 'static';
+  // NOTE: class हटा दी है, क्योंकि उसका CSS चीज़ें hide कर रहा हो सकता है
+  container.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 210mm;
+    background: #fff;
+    z-index: 9999998;
+    opacity: 1;
+    visibility: visible;
+    overflow: visible;
+  `;
   container.innerHTML = html;
   document.body.appendChild(container);
+
+  const cleanup = () => {
+    container.remove();
+    overlay.remove();
+  };
 
   const opt = {
     margin: 0,
@@ -38,34 +53,39 @@ function downloadReportPdf(r) {
     html2canvas: {
       scale: 2,
       useCORS: true,
-      letterRendering: true
+      scrollX: 0,
+      scrollY: 0,                       // scroll bug fix
+      backgroundColor: '#ffffff',
+      windowWidth: container.scrollWidth
     },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css', 'legacy'] }
   };
 
-  const cleanup = () => {
-    if (container.parentNode) container.parentNode.removeChild(container);
-    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-  };
+  try {
+    if (!window.html2pdf) throw new Error('html2pdf not loaded');
 
-  if (window.html2pdf) {
-    window.html2pdf().set(opt).from(container).save().then(() => {
-      cleanup();
-      toast('PDF downloaded successfully');
-    }).catch(err => {
-      console.error('PDF generation error:', err);
-      cleanup();
-      toast('PDF error: opened print window');
-      printReport(r);
-    });
-  } else {
+    // Fonts और images ready होने का wait
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    await Promise.all(
+      Array.from(container.querySelectorAll('img')).map(img =>
+        img.complete ? Promise.resolve() :
+          new Promise(res => { img.onload = img.onerror = res; })
+      )
+    );
+    await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+
+    await window.html2pdf().set(opt).from(container).save();
     cleanup();
-    toast('PDF library not ready, opening print window');
+    toast('PDF downloaded successfully');
+  } catch (err) {
+    console.error('PDF generation error:', err);
+    cleanup();
+    toast('PDF error: opened print window');
     printReport(r);
   }
 }
 
-// Global exposure for inline onclick buttons
 window.downloadPdfRep = labNo => {
   const r = find(labNo);
   if (r) downloadReportPdf(r);

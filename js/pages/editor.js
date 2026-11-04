@@ -1136,6 +1136,38 @@ window.openEditor = labNo => {
   if ($('edRTime')) $('edRTime').value = r.reportTime || '10:00';
   if ($('edRemarks')) $('edRemarks').value = r.remarks || '';
 
+  // Load doctor signature details into editor
+  const defaultSign = typeof getActiveDefaultSignature === 'function' ? getActiveDefaultSignature() : (typeof DEFAULT_DOCTOR_SIGNATURE !== 'undefined' ? DEFAULT_DOCTOR_SIGNATURE : '');
+  const defaultDocName = typeof getActiveDefaultDoctorName === 'function' ? getActiveDefaultDoctorName() : (typeof DEFAULT_DOCTOR_NAME !== 'undefined' ? DEFAULT_DOCTOR_NAME : 'Dr. Hanish Kumar Chawda, MBBS, MD');
+  const defaultDocDegree = typeof getActiveDefaultDoctorDegree === 'function' ? getActiveDefaultDoctorDegree() : (typeof DEFAULT_DOCTOR_DEGREE !== 'undefined' ? DEFAULT_DOCTOR_DEGREE : 'Pathologist, Olive Diagnostics, Raigarh');
+
+  window._currentEditorSignature = r.signature || null;
+
+  const edSignPreview = $('edSignPreview');
+  if (edSignPreview) {
+    edSignPreview.src = window._currentEditorSignature || defaultSign;
+  }
+  const edSignDoctorName = $('edSignDoctorName');
+  if (edSignDoctorName) {
+    edSignDoctorName.value = r.signDoctorName || defaultDocName;
+  }
+  const edSignDoctorDegree = $('edSignDoctorDegree');
+  if (edSignDoctorDegree) {
+    edSignDoctorDegree.value = r.signDoctorDegree || defaultDocDegree;
+  }
+  const edIncludeSign = $('edIncludeSign');
+  if (edIncludeSign) {
+    edIncludeSign.checked = !r.hideSignature;
+  }
+  const edSignStatusBadge = $('edSignStatusBadge');
+  if (edSignStatusBadge) {
+    const isCustom = Boolean(window._currentEditorSignature && window._currentEditorSignature !== defaultSign);
+    edSignStatusBadge.textContent = isCustom ? 'Custom Doctor Signature' : 'Fixed Default Active';
+    edSignStatusBadge.className = isCustom 
+      ? 'badge bg-warning text-dark fw-semibold'
+      : 'badge bg-light text-dark fw-semibold';
+  }
+
   show('editor');
 
   setTimeout(() => {
@@ -1183,6 +1215,27 @@ function saveEditor(status) {
   r.reportDate = $('edRDate')?.value || '';
   r.reportTime = $('edRTime')?.value || '';
   if (status) r.status = status;
+
+  // Signatory & Doctor Signature settings
+  const sDoc = $('edSignDoctorName')?.value.trim();
+  if (sDoc) r.signDoctorName = sDoc;
+  else delete r.signDoctorName;
+
+  const sDeg = $('edSignDoctorDegree')?.value.trim();
+  if (sDeg) r.signDoctorDegree = sDeg;
+  else delete r.signDoctorDegree;
+
+  if ($('edIncludeSign')) {
+    r.hideSignature = !$('edIncludeSign').checked;
+  }
+
+  if (window._currentEditorSignature !== undefined) {
+    if (window._currentEditorSignature) {
+      r.signature = window._currentEditorSignature;
+    } else {
+      delete r.signature;
+    }
+  }
 
   persist();
   if (typeof updateBadge === 'function') updateBadge();
@@ -1232,6 +1285,82 @@ function initEditorButtons() {
   const edBack = $('edBack');
   if (edBack) {
     edBack.onclick = () => show('pending');
+  }
+
+  initSignatureHandlers();
+}
+
+function initSignatureHandlers() {
+  const uploadInput = $('edSignUpload');
+  if (uploadInput) {
+    uploadInput.onchange = function(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        toast('Please select a valid image file');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const dataUrl = evt.target.result;
+        window._currentEditorSignature = dataUrl;
+        const edSignPreview = $('edSignPreview');
+        if (edSignPreview) edSignPreview.src = dataUrl;
+        const edSignStatusBadge = $('edSignStatusBadge');
+        if (edSignStatusBadge) {
+          edSignStatusBadge.textContent = 'Custom Doctor Signature';
+          edSignStatusBadge.className = 'badge bg-warning text-dark fw-semibold';
+        }
+        toast('Doctor signature uploaded for this report');
+      };
+      reader.readAsDataURL(file);
+      uploadInput.value = '';
+    };
+  }
+
+  const resetBtn = $('edSignResetBtn');
+  if (resetBtn) {
+    resetBtn.onclick = function() {
+      try {
+        localStorage.removeItem('olive_default_doctor_signature');
+        localStorage.removeItem('olive_default_doctor_name');
+        localStorage.removeItem('olive_default_doctor_degree');
+      } catch (err) {}
+      window._currentEditorSignature = null;
+      const defaultSign = typeof DEFAULT_DOCTOR_SIGNATURE !== 'undefined' ? DEFAULT_DOCTOR_SIGNATURE : '';
+      const defaultDocName = typeof DEFAULT_DOCTOR_NAME !== 'undefined' ? DEFAULT_DOCTOR_NAME : 'Dr. Hanish Kumar Chawda, MBBS, MD';
+      const defaultDocDegree = typeof DEFAULT_DOCTOR_DEGREE !== 'undefined' ? DEFAULT_DOCTOR_DEGREE : 'Pathologist, Olive Diagnostics, Raigarh';
+
+      const edSignPreview = $('edSignPreview');
+      if (edSignPreview) edSignPreview.src = defaultSign;
+      const edSignDoctorName = $('edSignDoctorName');
+      if (edSignDoctorName) edSignDoctorName.value = defaultDocName;
+      const edSignDoctorDegree = $('edSignDoctorDegree');
+      if (edSignDoctorDegree) edSignDoctorDegree.value = defaultDocDegree;
+      const edSignStatusBadge = $('edSignStatusBadge');
+      if (edSignStatusBadge) {
+        edSignStatusBadge.textContent = 'Fixed Default Active';
+        edSignStatusBadge.className = 'badge bg-light text-dark fw-semibold';
+      }
+      toast('Reset to fixed default signature');
+    };
+  }
+
+  const setDefaultBtn = $('edSignSetDefaultBtn');
+  if (setDefaultBtn) {
+    setDefaultBtn.onclick = function() {
+      const curSign = window._currentEditorSignature || (typeof getActiveDefaultSignature === 'function' ? getActiveDefaultSignature() : '');
+      const curName = $('edSignDoctorName')?.value.trim() || '';
+      const curDegree = $('edSignDoctorDegree')?.value.trim() || '';
+      try {
+        if (curSign) localStorage.setItem('olive_default_doctor_signature', curSign);
+        if (curName) localStorage.setItem('olive_default_doctor_name', curName);
+        if (curDegree) localStorage.setItem('olive_default_doctor_degree', curDegree);
+        toast('Saved as default signature for future reports');
+      } catch (err) {
+        toast('Could not save default signature');
+      }
+    };
   }
 }
 
