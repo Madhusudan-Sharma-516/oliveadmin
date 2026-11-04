@@ -16,3 +16,12 @@ const URINE_READY_REMARKS = [
   "AMORPHOUS URATES SEEN.",
   "HB ELECTROPHORESIS / HPLC."
 ];
+
+const WIDAL_READY_IMPRESSIONS = [
+  "Negative / Non-Reactive for Salmonella antibodies (< 1:20).",
+  "Titre of S. Typhi 'O' & 'H' >= 1:160 is clinically significant and suggestive of active Enteric Fever (Typhoid).",
+  "Titre of S. Typhi 'O' is significant (>= 1:80). Suggestive of acute early Enteric infection.",
+  "Elevated S. Typhi 'H' titre with low 'O' titre suggests past infection or prior vaccination.",
+  "Borderline titre (1:80). A repeat test after 7-10 days is recommended to demonstrate rising titre.",
+  "Positive for S. Paratyphi 'AH' (>= 1:80). Suggestive of Paratyphoid infection."
+];

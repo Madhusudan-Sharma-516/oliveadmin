@@ -6,11 +6,30 @@
 // Users list
 let users = load('users', null) || DEFAULT_USERS;
 
-// Tests catalog
+// Load and register custom test folder templates from localStorage into TEST_TEMPLATES
+function loadCustomTemplates() {
+  try {
+    const custom = load('olive_custom_templates', {});
+    if (custom && typeof custom === 'object') {
+      Object.keys(custom).forEach(key => {
+        if (typeof TEST_TEMPLATES === 'object' && TEST_TEMPLATES !== null) {
+          TEST_TEMPLATES[key] = custom[key];
+        }
+      });
+    }
+  } catch (e) {
+    console.error('Failed to load custom templates', e);
+  }
+}
+loadCustomTemplates();
+window.loadCustomTemplates = loadCustomTemplates;
+
+// Tests catalog (Synchronizes all default tests & templates into catalog)
 let tests = load('tests', null) || DEFAULT_TESTS;
 if (ensureDefaultTests(tests)) {
   store('tests', tests);
 }
+window.tests = tests;
 
 // Receipts / Lab Reports
 let receipts = load('receipts', []);

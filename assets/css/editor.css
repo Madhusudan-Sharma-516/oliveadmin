@@ -306,3 +306,353 @@
   background-color: #edf6fd;
 }
 
+/* ==========================================================================
+   Custom Test Folder Modal — Balanced Medical Lab & Aero Blue Theme
+   ========================================================================== */
+#customFolderModal .modal-body {
+  background-color: #ecf3f9 !important;
+}
+
+/* Info Header Card */
+.cf-info-card {
+  background: #ffffff;
+  border: 1px solid #bdd5e7;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(16, 48, 80, 0.05);
+}
+
+.cf-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #10385c;
+  display: block;
+}
+
+.cf-input {
+  background-color: #ffffff !important;
+  border: 1px solid #9fc1de !important;
+  color: #0c2b44 !important;
+  font-size: 12.5px;
+  transition: all 0.15s ease;
+}
+
+.cf-input:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+}
+
+/* Panel Cards (Immune to global .card and .card-header) */
+.cf-panel-card {
+  background: #ffffff;
+  border: 1px solid #bdd5e7;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 6px rgba(16, 48, 80, 0.06);
+}
+
+.cf-panel-header {
+  background: linear-gradient(180deg, #f4f8fc 0%, #e6f0f8 100%) !important;
+  border-bottom: 1px solid #bdd5e7 !important;
+  padding: 0.65rem 0.95rem;
+  color: #0b3558 !important;
+}
+
+.cf-panel-title {
+  color: #0b3558 !important;
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.2px;
+}
+
+.cf-panel-subtitle {
+  color: #50708c !important;
+  font-size: 11px;
+}
+
+.cf-pill-badge {
+  background: #dbeef9 !important;
+  color: #094776 !important;
+  border: 1px solid #b3d7f2 !important;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0.25rem 0.55rem;
+}
+
+.cf-pill-active {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border: 1px solid #0275b1 !important;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0.25rem 0.55rem;
+}
+
+.cf-search-group .input-group-text {
+  background-color: #ffffff;
+  border: 1px solid #9fc1de;
+  border-right: none;
+  color: #0284c7;
+}
+
+.cf-search-group .form-control {
+  border: 1px solid #9fc1de;
+  border-left: none;
+  background-color: #ffffff;
+  color: #0c2b44;
+  font-size: 12px;
+}
+
+.cf-search-group .form-control:focus {
+  border-color: #0284c7;
+  box-shadow: none;
+}
+
+.cf-panel-body {
+  padding: 0.55rem;
+  max-height: 440px;
+  overflow-y: auto;
+  background: #fbfdff;
+  flex-grow: 1;
+}
+
+.cf-panel-footer {
+  background: linear-gradient(180deg, #f4f8fc 0%, #eaf2f8 100%);
+  border-top: 1px solid #bdd5e7;
+  padding: 0.55rem 0.95rem;
+}
+
+.cf-footer-hint {
+  font-size: 11.5px;
+  color: #4b6b85;
+}
+
+/* Category Accordion */
+.cf-cat-card {
+  border: 1px solid #cbe0f0;
+  border-radius: 5px;
+  margin-bottom: 6px;
+  overflow: hidden;
+  background: #ffffff;
+  transition: all 0.15s ease;
+}
+
+.cf-cat-header {
+  padding: 7px 11px;
+  background: #f7fbfe;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid transparent;
+  color: #123d62;
+}
+
+.cf-cat-header:hover {
+  background-color: #eef6fc;
+}
+
+.cf-cat-header.is-open {
+  border-bottom-color: #bddbee;
+  background: linear-gradient(180deg, #eaf4fc 0%, #dbebf8 100%);
+  color: #083458;
+}
+
+.cf-param-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 9px;
+  margin-bottom: 4px;
+  background: #ffffff;
+  border: 1px solid #d5e5f2;
+  border-radius: 5px;
+  cursor: grab;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.cf-param-item:hover {
+  background-color: #f1f8fe;
+  border-color: #0284c7;
+  box-shadow: 0 2px 5px rgba(2, 132, 199, 0.12);
+  transform: translateX(2px);
+}
+
+.cf-param-item:active {
+  cursor: grabbing;
+}
+
+.cf-param-item.is-dragging {
+  opacity: 0.45;
+  border: 1px dashed #0284c7;
+}
+
+.cf-param-item.already-added {
+  background-color: #f0fdf4;
+  border-color: #86efac;
+}
+
+.cf-param-item.already-added .cf-param-title {
+  color: #14532d !important;
+}
+
+.cf-drop-zone-container {
+  min-height: 440px;
+  background: #f8fbfe;
+  transition: all 0.2s ease;
+  flex-grow: 1;
+}
+
+.cf-drop-zone-container.cf-drop-target-active {
+  background-color: #e6f3fc !important;
+  outline: 2px dashed #0284c7 !important;
+  outline-offset: -4px;
+}
+
+.cf-drop-icon-box {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #dff0fb;
+  border: 1px solid #bce1f7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0284c7;
+}
+
+.cf-empty-title {
+  color: #0b3558;
+  font-weight: 700;
+}
+
+.cf-empty-text {
+  color: #50708c;
+}
+
+.cf-params-table thead tr {
+  background: linear-gradient(180deg, #f2f7fb 0%, #e5eff7 100%) !important;
+  border-bottom: 2px solid #bfd6ea !important;
+}
+
+.cf-params-table thead th {
+  color: #0c365b !important;
+  font-weight: 700 !important;
+  background: transparent !important;
+  padding: 6px 8px !important;
+}
+
+.cf-params-table tbody tr {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e7eff5 !important;
+}
+
+.cf-params-table tbody td {
+  padding: 4px 6px !important;
+}
+
+.cf-params-table input.form-control {
+  background-color: #ffffff !important;
+  border: 1px solid #bed6e8 !important;
+  color: #0c2b44 !important;
+  font-size: 12px;
+  padding: 3px 6px;
+}
+
+.cf-params-table input.form-control:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15) !important;
+}
+
+.cf-add-btn {
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #0284c7 !important;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: all 0.12s ease;
+}
+
+.cf-add-btn:hover {
+  background: linear-gradient(180deg, #0369a1 0%, #075985 100%) !important;
+  border-color: #0369a1 !important;
+  color: #ffffff !important;
+}
+
+.cf-added-badge {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #86efac !important;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 2px 6px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ==========================================================================
+   Widal Test Matrix Interactive Styles
+   ========================================================================== */
+.widal-sheet-card {
+  border: 1px solid #bdd5e7 !important;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.widal-grid-table thead th {
+  background: linear-gradient(180deg, #f4f8fc 0%, #e6f0f8 100%) !important;
+  color: #0b3558 !important;
+  font-weight: 700 !important;
+  border-bottom: 2px solid #bdd5e7 !important;
+  padding: 6px 4px !important;
+  vertical-align: middle;
+}
+
+.widal-grid-table tbody td {
+  padding: 6px 4px !important;
+  vertical-align: middle;
+  border-color: #e2e8f0 !important;
+}
+
+.widal-cell-btn {
+  width: 44px;
+  height: 30px;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+}
+
+.widal-cell-btn.is-pos {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  border: 1px solid #b91c1c !important;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.3) !important;
+}
+
+.widal-cell-btn.is-neg {
+  background-color: #ffffff !important;
+  color: #64748b !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.widal-cell-btn.is-neg:hover {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+  border-color: #94a3b8 !important;
+}
+
+
+

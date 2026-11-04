@@ -175,13 +175,15 @@ const TEST_TEMPLATES = {
     id: 't096_widal_test_slide_tube',
     testId: 'T096',
     title: 'WIDAL TEST (SLIDE / TUBE)',
-    subtitle: 'Serology',
-    match: ['widal test (slide / tube)', 'widal test', 'widal'],
+    subtitle: 'Serology / Slide & Tube Agglutination',
+    method: 'METHOD : Qualitative & Semi-Quantitative Slide / Tube Agglutination Method.',
+    isWidal: true,
+    match: ['widal test (slide / tube)', 'widal test', 'widal', 't096', 'typhoid widal'],
     items: [
-      { name: 'S. Typhi O', unit: 'titre', range: '<1:80' },
-      { name: 'S. Typhi H', unit: 'titre', range: '<1:80' },
-      { name: 'S. Paratyphi AH', unit: 'titre', range: '<1:80' },
-      { name: 'S. Paratyphi BH', unit: 'titre', range: '<1:80' }
+      { name: "S. Typhi 'O'", unit: 'Titre', range: '< 1:80', defaultVal: 'Negative (< 1:20)' },
+      { name: "S. Typhi 'H'", unit: 'Titre', range: '< 1:160', defaultVal: 'Negative (< 1:20)' },
+      { name: "S. Paratyphi 'AH'", unit: 'Titre', range: '< 1:80', defaultVal: 'Negative (< 1:20)' },
+      { name: "S. Paratyphi 'BH'", unit: 'Titre', range: '< 1:80', defaultVal: 'Negative (< 1:20)' }
     ]
   },
   t008_hba1c_glycosylated_hemoglobin: {
@@ -1555,4 +1557,12 @@ function findTestParameter(name) {
   if (sub) return sub;
   
   return null;
+}
+
+
+if (typeof window !== 'undefined') {
+  window.TEST_TEMPLATES = TEST_TEMPLATES;
+  window.findTemplate = findTemplate;
+  window.findTestParameter = findTestParameter;
+  window.TEST_PARAMETERS_MASTER = TEST_PARAMETERS_MASTER;
 }

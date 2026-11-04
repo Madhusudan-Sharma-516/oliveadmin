@@ -447,6 +447,211 @@ window.removeTestFromEditor = idx => {
   toast(`Removed "${tName}" from report`);
 };
 
+
+/* ==========================================================================
+   Widal Test Dilution Matrix Controller & Calculations
+   ========================================================================== */
+
+window.initWidalData = function(st) {
+  if (!st) return null;
+  if (!st.widal || !Array.isArray(st.widal.antigens) || st.widal.antigens.length === 0) {
+    const defaultAntigens = [
+      { id: 'o', name: "S. Typhi 'O'", dilutions: { '1:20': '-', '1:40': '-', '1:80': '-', '1:160': '-', '1:320': '-' }, titre: 'Negative (< 1:20)' },
+      { id: 'h', name: "S. Typhi 'H'", dilutions: { '1:20': '-', '1:40': '-', '1:80': '-', '1:160': '-', '1:320': '-' }, titre: 'Negative (< 1:20)' },
+      { id: 'ah', name: "S. Paratyphi 'AH'", dilutions: { '1:20': '-', '1:40': '-', '1:80': '-', '1:160': '-', '1:320': '-' }, titre: 'Negative (< 1:20)' },
+      { id: 'bh', name: "S. Paratyphi 'BH'", dilutions: { '1:20': '-', '1:40': '-', '1:80': '-', '1:160': '-', '1:320': '-' }, titre: 'Negative (< 1:20)' }
+    ];
+
+    st.widal = {
+      antigens: defaultAntigens,
+      impression: "Negative / Non-Reactive for Salmonella antibodies (< 1:20)."
+    };
+
+    st.params = st.params || {};
+    defaultAntigens.forEach(a => {
+      st.params[a.name] = { value: a.titre, unit: 'Titre', range: (a.id === 'h' ? '< 1:160' : '< 1:80') };
+    });
+  }
+  return st.widal;
+};
+
+window.toggleWidalCell = function(testIdx, agId, dilution) {
+  const st = editorState[testIdx];
+  if (!st) return;
+  const widal = initWidalData(st);
+  const ag = widal.antigens.find(a => a.id === agId);
+  if (!ag) return;
+
+  const dils = ['1:20', '1:40', '1:80', '1:160', '1:320'];
+  const curVal = ag.dilutions[dilution] || '-';
+  const newVal = curVal === '+' ? '-' : '+';
+  const dIdx = dils.indexOf(dilution);
+
+  if (newVal === '+') {
+    for (let j = 0; j <= dIdx; j++) {
+      ag.dilutions[dils[j]] = '+';
+    }
+  } else {
+    for (let j = dIdx; j < dils.length; j++) {
+      ag.dilutions[dils[j]] = '-';
+    }
+  }
+
+  let highestPos = null;
+  for (let j = dils.length - 1; j >= 0; j--) {
+    if (ag.dilutions[dils[j]] === '+') {
+      highestPos = dils[j];
+      break;
+    }
+  }
+
+  if (highestPos) {
+    if (highestPos === '1:320' || highestPos === '1:160') {
+      ag.titre = highestPos + ' (Significant)';
+    } else if (highestPos === '1:80') {
+      ag.titre = (ag.id === 'h') ? '1:80 (Borderline)' : '1:80 (Significant)';
+    } else {
+      ag.titre = highestPos + ' (Non-significant)';
+    }
+  } else {
+    ag.titre = 'Negative (< 1:20)';
+  }
+
+  st.params = st.params || {};
+  st.params[ag.name] = { value: ag.titre, unit: 'Titre', range: (ag.id === 'h' ? '< 1:160' : '< 1:80') };
+
+  updateWidalAutoImpression(testIdx);
+  renderEditorRows();
+};
+
+window.updateWidalAutoImpression = function(testIdx) {
+  const st = editorState[testIdx];
+  if (!st || !st.widal) return;
+  const widal = st.widal;
+  const oAg = widal.antigens.find(a => a.id === 'o');
+  const hAg = widal.antigens.find(a => a.id === 'h');
+
+  const oPos160 = oAg?.dilutions['1:160'] === '+' || oAg?.dilutions['1:320'] === '+';
+  const oPos80 = oAg?.dilutions['1:80'] === '+';
+  const hPos160 = hAg?.dilutions['1:160'] === '+' || hAg?.dilutions['1:320'] === '+';
+  const hPos80 = hAg?.dilutions['1:80'] === '+';
+
+  let impression = '';
+  if (oPos160 && hPos160) {
+    impression = "Titre of S. Typhi 'O' and 'H' antigens (>= 1:160) is clinically significant and suggestive of active Enteric Fever (Typhoid).";
+  } else if (oPos80 && hPos160) {
+    impression = "Titre of S. Typhi 'O' (1:80) and 'H' (1:160) is clinically significant. Suggestive of active Enteric Fever.";
+  } else if (oPos80 && !hPos160) {
+    impression = "Titre of S. Typhi 'O' is significant (>= 1:80). Suggestive of acute early Enteric infection.";
+  } else if (hPos160 && !oPos80) {
+    impression = "Elevated S. Typhi 'H' titre with negative 'O' titre suggests past infection or prior vaccination.";
+  } else if (oPos80 || hPos80) {
+    impression = "Borderline titre (1:80). A repeat test after 7-10 days is recommended to demonstrate rising titre.";
+  } else {
+    impression = "Negative / Non-Reactive for Salmonella antibodies (< 1:20).";
+  }
+
+  widal.impression = impression;
+  st.remark = impression;
+};
+
+window.quickFillWidal = function(testIdx, presetType) {
+  const st = editorState[testIdx];
+  if (!st) return;
+  const widal = initWidalData(st);
+  const dils = ['1:20', '1:40', '1:80', '1:160', '1:320'];
+
+  const setAg = (agId, maxDil) => {
+    const ag = widal.antigens.find(a => a.id === agId);
+    if (!ag) return;
+    const maxIdx = maxDil ? dils.indexOf(maxDil) : -1;
+    dils.forEach((d, j) => {
+      ag.dilutions[d] = (j <= maxIdx) ? '+' : '-';
+    });
+    if (maxDil) {
+      if (maxDil === '1:320' || maxDil === '1:160') ag.titre = maxDil + ' (Significant)';
+      else if (maxDil === '1:80') ag.titre = (ag.id === 'h' ? '1:80 (Borderline)' : '1:80 (Significant)');
+      else ag.titre = maxDil + ' (Non-significant)';
+    } else {
+      ag.titre = 'Negative (< 1:20)';
+    }
+    st.params = st.params || {};
+    st.params[ag.name] = { value: ag.titre, unit: 'Titre', range: (ag.id === 'h' ? '< 1:160' : '< 1:80') };
+  };
+
+  if (presetType === 'all_neg') {
+    widal.antigens.forEach(a => setAg(a.id, null));
+    widal.impression = 'Negative / Non-Reactive for Salmonella antibodies (< 1:20).';
+    st.remark = widal.impression;
+    toast('Widal: Set All Negative (-)');
+  } else if (presetType === 'typhi_both_160') {
+    setAg('o', '1:160');
+    setAg('h', '1:160');
+    setAg('ah', null);
+    setAg('bh', null);
+    widal.impression = "Titre of S. Typhi 'O' and 'H' antigens (>= 1:160) is clinically significant and suggestive of active Enteric Fever (Typhoid).";
+    st.remark = widal.impression;
+    toast('Widal: Set S. Typhi O & H Positive (1:160)');
+  } else if (presetType === 'typhi_o_160') {
+    setAg('o', '1:160');
+    setAg('h', null);
+    setAg('ah', null);
+    setAg('bh', null);
+    widal.impression = "Titre of S. Typhi 'O' is significant (>= 1:80). Suggestive of acute early Enteric infection.";
+    st.remark = widal.impression;
+    toast('Widal: Set S. Typhi O Positive (1:160)');
+  } else if (presetType === 'typhi_h_160') {
+    setAg('o', null);
+    setAg('h', '1:160');
+    setAg('ah', null);
+    setAg('bh', null);
+    widal.impression = "Elevated S. Typhi 'H' titre with negative 'O' titre suggests past infection or prior vaccination.";
+    st.remark = widal.impression;
+    toast('Widal: Set S. Typhi H Positive (1:160)');
+  } else if (presetType === 'borderline_80') {
+    setAg('o', '1:80');
+    setAg('h', '1:80');
+    setAg('ah', null);
+    setAg('bh', null);
+    widal.impression = "Borderline titre (1:80). A repeat test after 7-10 days is recommended to demonstrate rising titre.";
+    st.remark = widal.impression;
+    toast('Widal: Set Borderline (1:80)');
+  }
+
+  renderEditorRows();
+};
+
+window.onWidalTitreChanged = function(testIdx, agId, val) {
+  const st = editorState[testIdx];
+  if (!st) return;
+  const widal = initWidalData(st);
+  const ag = widal.antigens.find(a => a.id === agId);
+  if (!ag) return;
+  ag.titre = val;
+  st.params = st.params || {};
+  st.params[ag.name] = { value: val, unit: 'Titre', range: (ag.id === 'h' ? '< 1:160' : '< 1:80') };
+};
+
+window.onWidalImpressionChanged = function(testIdx, val) {
+  const st = editorState[testIdx];
+  if (!st) return;
+  const widal = initWidalData(st);
+  widal.impression = val;
+  st.remark = val;
+};
+
+window.setWidalImpressionPhrase = function(testIdx, pIdx) {
+  const phrase = (typeof WIDAL_READY_IMPRESSIONS !== 'undefined' ? WIDAL_READY_IMPRESSIONS[pIdx] : '');
+  if (!phrase) return;
+  const st = editorState[testIdx];
+  if (!st) return;
+  const widal = initWidalData(st);
+  widal.impression = phrase;
+  st.remark = phrase;
+  const textarea = $('widalImpression_' + testIdx);
+  if (textarea) textarea.value = phrase;
+};
+
 window.calculateLipidProfile = idx => {
   const st = editorState[idx];
   if (!st) return;
@@ -690,6 +895,147 @@ function renderEditorRows() {
 
     // Flush any pending single tests before rendering this template profile
     html += flushSingleTests();
+
+    const isWidal = Boolean(tmpl.id === 't096_widal_test_slide_tube' || tmpl.isWidal || t.name.toLowerCase().includes('widal'));
+
+    if (isWidal) {
+      const widal = initWidalData(st);
+      const isCollapsed = Boolean(st.collapsed);
+
+      const dils = ['1:20', '1:40', '1:80', '1:160', '1:320'];
+      const widalRows = widal.antigens.map(ag => {
+        const cells = dils.map(d => {
+          const val = (ag.dilutions && ag.dilutions[d]) || '-';
+          const isPos = val === '+';
+          return `
+            <td class="text-center">
+              <button type="button" 
+                      class="widal-cell-btn ${isPos ? 'is-pos' : 'is-neg'}" 
+                      onclick="toggleWidalCell(${i}, '${ag.id}', '${d}')"
+                      title="Click to toggle (+ / -)">
+                ${isPos ? '+' : '&minus;'}
+              </button>
+            </td>
+          `;
+        }).join('');
+
+        const isAgPos = ag.titre && !ag.titre.toLowerCase().includes('negative');
+
+        return `
+          <tr>
+            <td class="text-start ps-3 fw-bold text-dark" style="font-size: 0.92rem;">
+              ${esc(ag.name)}
+            </td>
+            ${cells}
+            <td class="text-end pe-3">
+              <input type="text" class="form-control form-control-sm text-end fw-bold ${isAgPos ? 'text-danger' : 'text-dark'}" 
+                     value="${esc(ag.titre || '')}" 
+                     oninput="onWidalTitreChanged(${i}, '${ag.id}', this.value)"
+                     placeholder="Titre">
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      html += `
+        <div class="card shadow-sm mb-3 border widal-sheet-card">
+          <div class="card-header test-card-header py-2 px-3 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-grid-3x3-gap-fill text-warning fs-5"></i>
+              <span class="test-card-title fs-6">${esc(tmpl.title || t.name)}</span>
+              <span class="badge bg-white text-primary fw-semibold border-0 px-2 py-1">Agglutination Matrix</span>
+            </div>
+            <div class="d-flex align-items-center gap-1">
+              <button type="button" class="btn btn-sm btn-light text-primary fw-semibold py-0 px-2" onclick="quickFillWidal(${i}, 'all_neg')">
+                <i class="bi bi-check2 me-1"></i>All Negative (-)
+              </button>
+              <button type="button" class="btn btn-sm btn-danger fw-semibold py-0 px-2" onclick="quickFillWidal(${i}, 'typhi_both_160')">
+                <i class="bi bi-exclamation-triangle me-1"></i>O &amp; H (1:160)
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary text-white border-0 py-0 px-2" onclick="toggleTestCollapse(${i})" id="testExpandBtn_${i}" title="Collapse">
+                <i class="bi bi-chevron-up fs-5 text-white" id="testChevron_${i}"></i>
+              </button>
+              ${tests.length > 1 ? `
+                <button type="button" class="btn btn-sm btn-outline-secondary text-white border-0 py-0 px-2" onclick="removeTestFromEditor(${i})" title="Remove from report">
+                  <i class="bi bi-trash"></i>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+
+          <div id="testCardBody_${i}" class="${isCollapsed ? 'd-none' : ''}">
+            <!-- Quick Fill Bar -->
+            <div class="p-2 bg-light border-bottom d-flex flex-wrap align-items-center justify-content-between gap-2">
+              <div class="small fw-semibold text-secondary">
+                <i class="bi bi-lightning-charge-fill text-warning me-1"></i>Quick Result Presets:
+              </div>
+              <div class="d-flex flex-wrap gap-1">
+                <button type="button" class="btn btn-xs btn-outline-success py-1 px-2" style="font-size: 11px;" onclick="quickFillWidal(${i}, 'all_neg')">
+                  All Negative (-)
+                </button>
+                <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" style="font-size: 11px;" onclick="quickFillWidal(${i}, 'typhi_both_160')">
+                  S. Typhi O &amp; H (1:160)
+                </button>
+                <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" style="font-size: 11px;" onclick="quickFillWidal(${i}, 'typhi_o_160')">
+                  S. Typhi O Only (1:160)
+                </button>
+                <button type="button" class="btn btn-xs btn-outline-primary py-1 px-2" style="font-size: 11px;" onclick="quickFillWidal(${i}, 'typhi_h_160')">
+                  S. Typhi H Only (1:160)
+                </button>
+                <button type="button" class="btn btn-xs btn-outline-warning text-dark py-1 px-2" style="font-size: 11px;" onclick="quickFillWidal(${i}, 'borderline_80')">
+                  Borderline (1:80)
+                </button>
+              </div>
+            </div>
+
+            <!-- Widal Dilution Matrix Table -->
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle mb-0 text-center widal-grid-table">
+                <thead>
+                  <tr>
+                    <th style="width: 30%; text-align: left;" class="ps-3">ANTIGEN</th>
+                    <th style="width: 10%;">1:20</th>
+                    <th style="width: 10%;">1:40</th>
+                    <th style="width: 10%;">1:80</th>
+                    <th style="width: 10%;">1:160</th>
+                    <th style="width: 10%;">1:320</th>
+                    <th style="width: 20%; text-align: right;" class="pe-3">FINAL TITRE</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${widalRows}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Clinical Impression Box -->
+            <div class="p-3 border-top bg-light">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-bold text-dark">
+                  <i class="bi bi-file-earmark-medical text-primary me-1"></i>CLINICAL IMPRESSION / INTERPRETATION:
+                </span>
+                <span class="small text-muted" style="font-size: 11px;">Printed directly on report</span>
+              </div>
+              <textarea id="widalImpression_${i}" class="form-control form-control-sm mb-2" rows="2" 
+                        style="font-weight: 600; font-size: 12px;" 
+                        oninput="onWidalImpressionChanged(${i}, this.value)" 
+                        placeholder="Enter clinical impression...">${esc(widal.impression || '')}</textarea>
+              
+              <div class="d-flex flex-wrap gap-1">
+                ${(typeof WIDAL_READY_IMPRESSIONS !== 'undefined' ? WIDAL_READY_IMPRESSIONS : []).map((phrase, pIdx) => `
+                  <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2 text-start" 
+                          style="font-size: 10.5px; border-radius: 12px;" 
+                          onclick="setWidalImpressionPhrase(${i}, ${pIdx})">
+                    ${esc(phrase.length > 45 ? phrase.substring(0, 45) + '...' : phrase)}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      return;
+    }
 
     const isCollapsed = Boolean(st.collapsed);
     const rows = tmpl.items.map(item => {
@@ -1092,6 +1438,9 @@ window.openEditor = labNo => {
         if (editorState[i].remark === undefined) {
           editorState[i].remark = prev.remark !== undefined ? prev.remark : (tmpl.remark || '');
         }
+        if (prev.widal) {
+          editorState[i].widal = prev.widal;
+        }
       } else {
         if (editorState[i].remark === undefined) {
           editorState[i].remark = prev.remark || '';
@@ -1195,7 +1544,8 @@ function saveEditor(status) {
         params: st.params || {},
         method: tmpl.method || '',
         remark: st.remark !== undefined ? st.remark.trim() : (tmpl.remark || ''),
-        value: 'Detailed Parameters'
+        value: 'Detailed Parameters',
+        widal: st.widal || null
       };
     } else {
       r.results[t.name] = {

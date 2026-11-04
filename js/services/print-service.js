@@ -129,6 +129,7 @@ function getReportHtml(r) {
     }
 
     const isLipid = (tmpl?.id === 'lipid') || t.name.toLowerCase().includes('lipid');
+    const isWidal = Boolean(tmpl?.id === 't096_widal_test_slide_tube' || tmpl?.isWidal || t.name.toLowerCase().includes('widal'));
 
     return `
       <div class="report-page">
@@ -165,22 +166,102 @@ function getReportHtml(r) {
             </table>
           </div>
 
-          <div style="border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 3px 0; margin-bottom: 8px; font-weight: bold; font-size: 12px; display: flex;">
-            <div style="width: 44%;">Investigation</div>
-            <div style="width: 18%;">Result</div>
-            <div style="width: 16%;">Unit</div>
-            <div style="width: 22%;">Reference range</div>
-          </div>
+          ${isWidal ? `
+            <div style="border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 3px 0; margin-bottom: 8px; font-weight: bold; font-size: 12px; display: flex; justify-content: space-between;">
+              <div>INVESTIGATION : WIDAL TEST (SEROLOGY)</div>
+              <div>METHOD : SLIDE / TUBE AGGLUTINATION</div>
+            </div>
 
-          <div style="text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 8px; text-decoration: underline; letter-spacing: 0.5px;">
-            ${esc(testTitle)}
-          </div>
+            <div style="text-align: center; font-size: 13.5px; font-weight: bold; margin-bottom: 8px; text-decoration: underline; letter-spacing: 0.5px;">
+              WIDAL TEST (SLIDE / TUBE AGGLUTINATION)
+            </div>
 
-          <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
-            <tbody>
-              ${rowsHtml}
-            </tbody>
-          </table>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px; border: 1.5px solid #111; margin-bottom: 10px;">
+              <thead>
+                <tr style="background-color: #f1f5f9; border-bottom: 1.5px solid #111; text-align: center;">
+                  <th style="padding: 5px 8px; text-align: left; width: 30%; border-right: 1px solid #777;">ANTIGEN</th>
+                  <th style="padding: 5px 4px; width: 10%; border-right: 1px solid #777;">1:20</th>
+                  <th style="padding: 5px 4px; width: 10%; border-right: 1px solid #777;">1:40</th>
+                  <th style="padding: 5px 4px; width: 10%; border-right: 1px solid #777;">1:80</th>
+                  <th style="padding: 5px 4px; width: 10%; border-right: 1px solid #777;">1:160</th>
+                  <th style="padding: 5px 4px; width: 10%; border-right: 1px solid #777;">1:320</th>
+                  <th style="padding: 5px 8px; text-align: right; width: 20%;">FINAL TITRE</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(() => {
+                  const widal = x.widal || {
+                    antigens: [
+                      { name: "S. Typhi 'O'", dilutions: { '1:20': '-', '1:40': '-', '1:80': '-', '1:160': '-', '1:320': '-' }, titre: (x.params && x.params["S. Typhi 'O'"]?.value) || 'Negative (< 1:20)' },
+                      { name: "S. Typhi 'H'", dilutions: { '1:20': '-', '1:40': '-', '1:80': '-', '1:160': '-', '1:320': '-' }, titre: (x.params && x.params["S. Typhi 'H'"]?.value) || 'Negative (< 1:20)' },
+                      { name: "S. Paratyphi 'AH'", dilutions: { '1:20': '-', '1:40': '-', '1:80': '-', '1:160': '-', '1:320': '-' }, titre: (x.params && x.params["S. Paratyphi 'AH'"]?.value) || 'Negative (< 1:20)' },
+                      { name: "S. Paratyphi 'BH'", dilutions: { '1:20': '-', '1:40': '-', '1:80': '-', '1:160': '-', '1:320': '-' }, titre: (x.params && x.params["S. Paratyphi 'BH'"]?.value) || 'Negative (< 1:20)' }
+                    ]
+                  };
+                  return (widal.antigens || []).map(ag => {
+                    const dils = ['1:20', '1:40', '1:80', '1:160', '1:320'];
+                    const cells = dils.map(d => {
+                      const val = (ag.dilutions && ag.dilutions[d]) || '-';
+                      const isPos = val === '+';
+                      return `
+                        <td style="padding: 4px 4px; text-align: center; border-right: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1;">
+                          ${isPos ? '<span style="font-weight: 900; color: #b91c1c; font-size: 13.5px;">+</span>' : '<span style="color: #475569; font-size: 13.5px;">&minus;</span>'}
+                        </td>
+                      `;
+                    }).join('');
+                    const isPosTitre = ag.titre && !ag.titre.toLowerCase().includes('negative');
+                    return `
+                      <tr>
+                        <td style="padding: 5px 8px; font-weight: bold; text-align: left; border-right: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; font-size: 11.5px;">
+                          ${esc(ag.name)}
+                        </td>
+                        ${cells}
+                        <td style="padding: 5px 8px; text-align: right; border-bottom: 1px solid #cbd5e1; font-weight: bold; font-size: 11.5px; ${isPosTitre ? 'color: #b91c1c;' : ''}">
+                          ${esc(ag.titre || 'Negative (< 1:20)')}
+                        </td>
+                      </tr>
+                    `;
+                  }).join('');
+                })()}
+              </tbody>
+            </table>
+
+            <div style="margin-top: 8px; border: 1.5px solid #000; padding: 5px 8px; font-size: 11px; border-radius: 3px; background: #fff;">
+              <div style="font-weight: bold; font-size: 11px; text-decoration: underline; margin-bottom: 2px; letter-spacing: 0.5px;">CLINICAL IMPRESSION / INTERPRETATION :</div>
+              <div style="font-weight: bold; font-size: 10.5px; line-height: 1.4;">${esc((x.widal && x.widal.impression) || x.remark || 'Negative / Non-Reactive for Salmonella antibodies (< 1:20).')}</div>
+            </div>
+
+            <div style="margin-top: 10px; font-size: 10px; line-height: 1.45; color: #222;">
+              <div style="font-weight: bold; text-decoration: underline; margin-bottom: 2px;">DIAGNOSTIC GUIDELINES &amp; INTERPRETATION :</div>
+              <ul style="margin: 2px 0 0 16px; padding: 0;">
+                <li>A single Widal test is of limited diagnostic value. A <b>four-fold or greater rise in titre</b> in paired sera taken 7 to 10 days apart confirms acute active infection.</li>
+                <li>In non-vaccinated individuals, a titre of <b>&ge; 1:80</b> for 'O' antigen and <b>&ge; 1:160</b> for 'H' antigen is clinically significant for Enteric Fever (Typhoid).</li>
+                <li>Isolated rise in 'H' antigen titre usually indicates past infection, anamnestic response, or prior TAB vaccination.</li>
+              </ul>
+            </div>
+
+            <div style="margin-top: 6px; font-size: 10.5px;">
+              <b>METHOD :</b> Qualitative and Semi-Quantitative Slide / Tube Agglutination Method.
+            </div>
+          ` : `
+            <div style="border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 3px 0; margin-bottom: 8px; font-weight: bold; font-size: 12px; display: flex;">
+              <div style="width: 44%;">Investigation</div>
+              <div style="width: 18%;">Result</div>
+              <div style="width: 16%;">Unit</div>
+              <div style="width: 22%;">Reference range</div>
+            </div>
+
+            <div style="text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 8px; text-decoration: underline; letter-spacing: 0.5px;">
+              ${esc(testTitle)}
+            </div>
+
+            <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+          `}
+
 
           ${isLipid ? `
             <div style="margin-top: 10px; font-size: 11px;">
@@ -200,12 +281,12 @@ function getReportHtml(r) {
             </div>
           ` : ''}
 
-          ${remarkText ? `
+          ${(remarkText && !isWidal) ? `
             <div style="margin-top: 10px; border: 1.5px solid #000; padding: 5px 8px; font-size: 10.5px; border-radius: 3px; background: #fff;">
               <div style="font-weight: bold; font-size: 10.5px; text-decoration: underline; margin-bottom: 2px; letter-spacing: 0.5px;">REMARK : ${esc(testTitle)}</div>
               <div style="white-space: pre-line; line-height: 1.45; font-weight: bold; font-size: 10px;">${esc(remarkText)}</div>
             </div>` : ''}
-          ${methodText ? `<div style="margin-top: 8px; font-size: 11px;">${esc(methodText)}</div>` : ''}
+          ${(methodText && !isWidal) ? `<div style="margin-top: 8px; font-size: 11px;">${esc(methodText)}</div>` : ''}
           ${r.remarks ? `<div style="margin-top: 8px; font-size: 11.5px;"><b>Remarks:</b> ${esc(r.remarks)}</div>` : ''}
         </div>
 

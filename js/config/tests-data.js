@@ -32,27 +32,56 @@ const DEFAULT_TESTS = [
 ].map(([name, price]) => ({ name, price }));
 
 /**
- * Ensures critical lab tests exist in the saved tests list.
+ * Ensures all diagnostic lab tests and templates exist in the saved tests catalog.
+ * Synchronizes default tests and all standard diagnostic panels from TEST_TEMPLATES.
  * @param {Array} currentTests
  * @returns {boolean} true if changes were made
  */
 function ensureDefaultTests(currentTests) {
-  const existing = new Set(currentTests.map(t => t.name.toLowerCase()));
-  const extra = [
-    { name: "CBC (Complete Blood Count)", price: 300 },
-    { name: "Haematology", price: 300 },
-    { name: "Lipid Profile", price: 600 },
-    { name: "Biochemistry", price: 500 },
-    { name: "Urine Analysis", price: 100 },
-    { name: "Urine Routine", price: 100 }
-  ];
+  if (!Array.isArray(currentTests)) return false;
+  const existing = new Set(currentTests.map(t => (t && t.name ? t.name.toLowerCase().trim() : '')));
   let changed = false;
-  extra.forEach(item => {
-    if (!existing.has(item.name.toLowerCase())) {
-      currentTests.push(item);
-      existing.add(item.name.toLowerCase());
+
+  // 1. Ensure basic default tests exist
+  DEFAULT_TESTS.forEach(item => {
+    const lower = item.name.toLowerCase().trim();
+    if (!existing.has(lower)) {
+      currentTests.push({ name: item.name, price: item.price });
+      existing.add(lower);
       changed = true;
     }
   });
+
+  // 2. Ensure all standard test templates from TEST_TEMPLATES are in catalog
+  if (typeof TEST_TEMPLATES === 'object' && TEST_TEMPLATES !== null) {
+    Object.keys(TEST_TEMPLATES).forEach(key => {
+      const tmpl = TEST_TEMPLATES[key];
+      if (!tmpl || !tmpl.title || tmpl.isCustomFolder) return;
+
+      const title = tmpl.title.trim();
+      const titleLower = title.toLowerCase();
+
+      // Check if already in catalog by exact title or match aliases
+      const alreadyExists = existing.has(titleLower) || 
+        (tmpl.match && tmpl.match.some(m => existing.has(m.toLowerCase())));
+
+      if (!alreadyExists) {
+        // Assign standard realistic diagnostic price based on panel depth
+        const paramCount = (tmpl.items || []).filter(i => !i.isHeader).length;
+        let price = 250;
+        if (paramCount >= 10) price = 700;
+        else if (paramCount >= 5) price = 500;
+        else if (paramCount >= 3) price = 350;
+
+        currentTests.push({
+          name: title,
+          price: price
+        });
+        existing.add(titleLower);
+        changed = true;
+      }
+    });
+  }
+
   return changed;
 }
