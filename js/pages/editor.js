@@ -734,12 +734,12 @@ function renderEditorRows() {
           <textarea id="urineRemark_${i}" class="form-control form-control-sm form-control-result mb-2" data-test-idx="${i}" data-f="remark" rows="3" style="font-size: 0.88rem; font-weight: 600; line-height: 1.5; resize: vertical;" placeholder="Urine Analysis remarks...">${esc(st.remark !== undefined ? st.remark : (tmpl.remark || ''))}</textarea>
           <div class="d-flex flex-wrap gap-1" id="urinePhrases_${i}">
             ${URINE_READY_REMARKS.map((line, pIdx) => {
-              const curRemark = (st.remark !== undefined ? st.remark : (tmpl.remark || ''));
-              const isSel = curRemark.includes(line.trim());
-              return `<button type="button" class="btn btn-sm ${isSel ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2 ready-phrase-btn" style="font-size: 0.74rem; border-radius: 12px; white-space: normal; text-align: left;" onclick="toggleUrineRemarkPhrase(${i}, ${pIdx})">
+        const curRemark = (st.remark !== undefined ? st.remark : (tmpl.remark || ''));
+        const isSel = curRemark.includes(line.trim());
+        return `<button type="button" class="btn btn-sm ${isSel ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2 ready-phrase-btn" style="font-size: 0.74rem; border-radius: 12px; white-space: normal; text-align: left;" onclick="toggleUrineRemarkPhrase(${i}, ${pIdx})">
                 ${isSel ? '<i class="bi bi-check2 me-1"></i>' : '<i class="bi bi-plus me-1"></i>'}${esc(line)}
               </button>`;
-            }).join('')}
+      }).join('')}
           </div>
         </div>
       `;
@@ -794,9 +794,9 @@ function renderEditorRows() {
               <i class="bi bi-eraser me-1"></i><span class="d-none d-md-inline">Clear Test</span>
             </button>
             ${tests.length > 1 ? `<button type="button" class="btn btn-sm btn-outline-light border-0 py-1 px-2 text-white-50 hover-danger" title="Remove this test from report" onclick="event.stopPropagation(); removeTestFromEditor(${i});"><i class="bi bi-trash3 text-white"></i></button>` : ''}
-            <span class="badge bg-light bg-opacity-25 text-white border-0 small d-none d-sm-inline" id="testStatusBadge_${i}">${isCollapsed ? 'Collapsed' : 'Open'}</span>
+            <span class="badge bg-light bg-opacity-25 text-black border-0 small d-none d-sm-inline" id="testStatusBadge_${i}">${isCollapsed ? 'Collapsed' : 'Open'}</span>
             <button type="button" class="btn btn-sm btn-light bg-opacity-25 border-0 rounded-circle expand-btn text-white" id="testExpandBtn_${i}" title="${isCollapsed ? 'Expand' : 'Collapse'}" onclick="event.stopPropagation(); toggleTestCollapse(${i});">
-              <i id="testChevron_${i}" class="bi ${isCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'} fs-5 text-white"></i>
+              <i id="testChevron_${i}" class="bi ${isCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'} fs-5 text-black"></i>
             </button>
           </div>
         </div>
@@ -845,7 +845,7 @@ function getVisibleResultInputs() {
 function focusAndSelectInput(inp) {
   if (!inp) return;
   inp.focus();
-  try { inp.select(); } catch (err) {}
+  try { inp.select(); } catch (err) { }
   inp.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
@@ -1075,10 +1075,10 @@ window.openEditor = labNo => {
   const r = find(labNo);
   if (!r) return;
   editing = labNo;
-  
+
   if ($('edPatient')) $('edPatient').textContent = `${r.name} — Lab No ${r.labNo}`;
   if ($('edMeta')) $('edMeta').textContent = `${r.age} yrs / ${r.gender}${r.doctor ? ' · Doctor: ' + r.doctor : ''}`;
-  
+
   editorState = {};
   (r.tests || []).forEach((t, i) => {
     const prev = (r.results || {})[t.name];
@@ -1163,7 +1163,7 @@ window.openEditor = labNo => {
   if (edSignStatusBadge) {
     const isCustom = Boolean(window._currentEditorSignature && window._currentEditorSignature !== defaultSign);
     edSignStatusBadge.textContent = isCustom ? 'Custom Doctor Signature' : 'Fixed Default Active';
-    edSignStatusBadge.className = isCustom 
+    edSignStatusBadge.className = isCustom
       ? 'badge bg-warning text-dark fw-semibold'
       : 'badge bg-light text-dark fw-semibold';
   }
@@ -1174,7 +1174,7 @@ window.openEditor = labNo => {
     const firstResult = $('edRows') ? $('edRows').querySelector('input.form-control-result:not([readonly]):not([disabled])') : null;
     if (firstResult && firstResult.offsetParent !== null) {
       firstResult.focus();
-      try { firstResult.select(); } catch (err) {}
+      try { firstResult.select(); } catch (err) { }
     }
   }, 100);
 };
@@ -1293,7 +1293,7 @@ function initEditorButtons() {
 function initSignatureHandlers() {
   const uploadInput = $('edSignUpload');
   if (uploadInput) {
-    uploadInput.onchange = function(e) {
+    uploadInput.onchange = function (e) {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
       if (!file.type.startsWith('image/')) {
@@ -1301,7 +1301,7 @@ function initSignatureHandlers() {
         return;
       }
       const reader = new FileReader();
-      reader.onload = function(evt) {
+      reader.onload = function (evt) {
         const dataUrl = evt.target.result;
         window._currentEditorSignature = dataUrl;
         const edSignPreview = $('edSignPreview');
@@ -1320,12 +1320,12 @@ function initSignatureHandlers() {
 
   const resetBtn = $('edSignResetBtn');
   if (resetBtn) {
-    resetBtn.onclick = function() {
+    resetBtn.onclick = function () {
       try {
         localStorage.removeItem('olive_default_doctor_signature');
         localStorage.removeItem('olive_default_doctor_name');
         localStorage.removeItem('olive_default_doctor_degree');
-      } catch (err) {}
+      } catch (err) { }
       window._currentEditorSignature = null;
       const defaultSign = typeof DEFAULT_DOCTOR_SIGNATURE !== 'undefined' ? DEFAULT_DOCTOR_SIGNATURE : '';
       const defaultDocName = typeof DEFAULT_DOCTOR_NAME !== 'undefined' ? DEFAULT_DOCTOR_NAME : 'Dr. Hanish Kumar Chawda, MBBS, MD';
@@ -1348,7 +1348,7 @@ function initSignatureHandlers() {
 
   const setDefaultBtn = $('edSignSetDefaultBtn');
   if (setDefaultBtn) {
-    setDefaultBtn.onclick = function() {
+    setDefaultBtn.onclick = function () {
       const curSign = window._currentEditorSignature || (typeof getActiveDefaultSignature === 'function' ? getActiveDefaultSignature() : '');
       const curName = $('edSignDoctorName')?.value.trim() || '';
       const curDegree = $('edSignDoctorDegree')?.value.trim() || '';
