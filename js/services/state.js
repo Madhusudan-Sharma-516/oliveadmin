@@ -10,12 +10,10 @@ let users = load('users', null) || DEFAULT_USERS;
 function loadCustomTemplates() {
   try {
     const custom = load('olive_custom_templates', {}) || {};
-    // Ensure built-in custom folder 'form_21' is persisted into olive_custom_templates if missing
+    // Ensure built-in custom folder 'form_21' is synchronized into olive_custom_templates with empty default values
     if (typeof TEST_TEMPLATES === 'object' && TEST_TEMPLATES !== null && TEST_TEMPLATES.form_21) {
-      if (!custom.form_21) {
-        custom.form_21 = TEST_TEMPLATES.form_21;
-        store('olive_custom_templates', custom);
-      }
+      custom.form_21 = TEST_TEMPLATES.form_21;
+      store('olive_custom_templates', custom);
     }
     if (custom && typeof custom === 'object') {
       Object.keys(custom).forEach(key => {

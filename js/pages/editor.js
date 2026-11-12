@@ -115,7 +115,7 @@ window.fillForm21SampleDefaults = idx => {
   tmpl.items.forEach(it => {
     if (!it.isHeader) {
       editorState[idx].params[it.name] = {
-        value: it.defaultVal || '',
+        value: it.sampleVal || it.defaultVal || '',
         unit: it.unit || '',
         range: it.range || ''
       };
@@ -123,6 +123,24 @@ window.fillForm21SampleDefaults = idx => {
   });
   renderEditorRows();
   toast('Form 21 standard sample values filled');
+};
+
+window.clearForm21Values = idx => {
+  snapshotEditorInputs();
+  const tmpl = TEST_TEMPLATES.form_21;
+  if (!tmpl) return;
+  editorState[idx].params = {};
+  tmpl.items.forEach(it => {
+    if (!it.isHeader) {
+      editorState[idx].params[it.name] = {
+        value: '',
+        unit: it.unit || '',
+        range: it.range || ''
+      };
+    }
+  });
+  renderEditorRows();
+  toast('Form 21 values cleared');
 };
 
 window.toggleUrineRemarkPhrase = (idx, phraseIdx) => {
@@ -1117,6 +1135,20 @@ function renderEditorRows() {
                 ${isSel ? '<i class="bi bi-check2 me-1"></i>' : '<i class="bi bi-plus me-1"></i>'}${esc(line)}
               </button>`;
       }).join('')}
+          </div>
+        </div>
+      `;
+    } else if (tmpl.id === 'form_21') {
+      extraHtml = `
+        <div class="p-2 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary text-white"><i class="bi bi-file-earmark-medical me-1"></i>Form 21 &middot; 4 Pages</span>
+            <span class="small text-muted">Page 1: Haematology &middot; Page 2: Biochemistry &amp; Lipid &middot; Page 3: Urine &middot; Page 4: Serology &amp; Stool</span>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" style="font-size:0.75rem;" onclick="clearForm21Values(${i})"><i class="bi bi-eraser me-1"></i>Clear Values</button>
+            <button type="button" class="btn btn-xs btn-outline-success py-1 px-2" style="font-size:0.75rem;" onclick="fillForm21SampleDefaults(${i})"><i class="bi bi-magic me-1"></i>Fill Sample Values</button>
+            <button type="button" class="btn btn-xs btn-outline-primary py-1 px-2" style="font-size:0.75rem;" onclick="calculateLipidProfile(${i})"><i class="bi bi-calculator me-1"></i>Calculate Lipid</button>
           </div>
         </div>
       `;
