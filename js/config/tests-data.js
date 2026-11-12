@@ -5,6 +5,7 @@
 const DEFAULT_TESTS = [
   ["CBC (Complete Blood Count)", 300],
   ["Haematology", 300],
+  ["Form 21", 1500],
   ["Hemoglobin", 100],
   ["Blood Sugar Fasting", 80],
   ["Blood Sugar PP", 80],
@@ -17,6 +18,7 @@ const DEFAULT_TESTS = [
   ["TSH", 250],
   ["Urine Analysis", 100],
   ["Urine Routine", 100],
+  ["Stool Examination", 200],
   ["Widal Test", 150],
   ["Malaria Antigen", 250],
   ["Dengue NS1", 600],
@@ -29,7 +31,11 @@ const DEFAULT_TESTS = [
   ["X-Ray Chest", 300],
   ["ECG", 200],
   ["USG Abdomen", 800]
-].map(([name, price]) => ({ name, price }));
+].map(([name, price]) => ({
+  name,
+  price,
+  ...(name.toLowerCase() === 'form 21' ? { customFolderId: 'form_21' } : {})
+}));
 
 /**
  * Ensures all diagnostic lab tests and templates exist in the saved tests catalog.
@@ -46,9 +52,20 @@ function ensureDefaultTests(currentTests) {
   DEFAULT_TESTS.forEach(item => {
     const lower = item.name.toLowerCase().trim();
     if (!existing.has(lower)) {
-      currentTests.push({ name: item.name, price: item.price });
+      currentTests.push({
+        name: item.name,
+        price: item.price,
+        ...(item.customFolderId ? { customFolderId: item.customFolderId } : {})
+      });
       existing.add(lower);
       changed = true;
+    } else if (item.customFolderId) {
+      // Ensure customFolderId is attached if previously missing
+      const match = currentTests.find(t => t && t.name && t.name.toLowerCase().trim() === lower);
+      if (match && !match.customFolderId) {
+        match.customFolderId = item.customFolderId;
+        changed = true;
+      }
     }
   });
 

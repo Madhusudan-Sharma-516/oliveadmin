@@ -106,6 +106,25 @@ window.fillUrineDefaults = idx => {
   toast('Normal urine values filled');
 };
 
+
+window.fillForm21SampleDefaults = idx => {
+  snapshotEditorInputs();
+  const tmpl = TEST_TEMPLATES.form_21;
+  if (!tmpl) return;
+  editorState[idx].params = editorState[idx].params || {};
+  tmpl.items.forEach(it => {
+    if (!it.isHeader) {
+      editorState[idx].params[it.name] = {
+        value: it.defaultVal || '',
+        unit: it.unit || '',
+        range: it.range || ''
+      };
+    }
+  });
+  renderEditorRows();
+  toast('Form 21 standard sample values filled');
+};
+
 window.toggleUrineRemarkPhrase = (idx, phraseIdx) => {
   snapshotEditorInputs();
   const phrase = URINE_READY_REMARKS[phraseIdx];
@@ -369,10 +388,22 @@ window.addTestToEditor = (testName, price) => {
   const newIdx = r.tests.length - 1;
   const tmpl = typeof findTemplate === 'function' ? findTemplate(testName) : null;
   if (tmpl) {
+    const defaultParams = {};
+    if (tmpl.id === 'form_21') {
+      (tmpl.items || []).forEach(it => {
+        if (!it.isHeader) {
+          defaultParams[it.name] = {
+            value: it.defaultVal || '',
+            unit: it.unit || '',
+            range: it.range || ''
+          };
+        }
+      });
+    }
     editorState[newIdx] = {
       isDetailed: true,
       templateId: tmpl.id,
-      params: {},
+      params: defaultParams,
       method: tmpl.method || '',
       remark: tmpl.remark || '',
       collapsed: false
@@ -656,7 +687,7 @@ window.calculateLipidProfile = idx => {
   const st = editorState[idx];
   if (!st) return;
   const tmpl = TEST_TEMPLATES[st.templateId] || findTemplate((find(editing)?.tests?.[idx] || {}).name);
-  if (!tmpl || tmpl.id !== 'lipid') return;
+  if (!tmpl || (tmpl.id !== 'lipid' && tmpl.id !== 'form_21')) return;
 
   st.params = st.params || {};
   const cholStr = (st.params['CHOLESTEROL']?.value ?? '').toString().trim();
@@ -1313,7 +1344,7 @@ function initEditorEvents() {
 
       if (f === 'value') {
         const tmpl = TEST_TEMPLATES[editorState[idx].templateId] || findTemplate((find(editing)?.tests?.[idx] || {}).name);
-        if (tmpl && (tmpl.id === 'lipid' || tmpl.id.includes('lipid'))) {
+        if (tmpl && (tmpl.id === 'lipid' || tmpl.id.includes('lipid') || tmpl.id === 'form_21')) {
           if (p === 'CHOLESTEROL' || p === 'TRIGLYCERIDES' || p === 'HDL' || p.includes('Cholesterol') || p.includes('Triglycerides')) {
             calculateLipidProfile(idx);
           }
@@ -1449,10 +1480,22 @@ window.openEditor = labNo => {
     } else {
       const tmpl = findTemplate(t.name);
       if (tmpl) {
+        const defaultParams = {};
+        if (tmpl.id === 'form_21') {
+          (tmpl.items || []).forEach(it => {
+            if (!it.isHeader) {
+              defaultParams[it.name] = {
+                value: it.defaultVal || '',
+                unit: it.unit || '',
+                range: it.range || ''
+              };
+            }
+          });
+        }
         editorState[i] = {
           isDetailed: true,
           templateId: tmpl.id,
-          params: {},
+          params: defaultParams,
           method: tmpl.method || '',
           remark: tmpl.remark || ''
         };
