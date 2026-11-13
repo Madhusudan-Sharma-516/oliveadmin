@@ -1147,7 +1147,7 @@ function renderEditorRows() {
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="badge bg-primary text-white"><i class="bi bi-file-earmark-medical me-1"></i>Form 21 &middot; 4 Pages</span>
             <span class="small text-muted">Page 1: Haematology &middot; Page 2: Biochemistry &amp; Lipid &middot; Page 3: Urine &middot; Page 4: Serology &amp; Stool</span>
-            <span class="badge bg-white text-secondary border small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Shortcuts: <b>z</b> = NIL &middot; Color: <b>py</b>, <b>r</b>, <b>n</b>, <b>yl</b> &middot; RH: <b>p</b>, <b>n</b></span>
+            <span class="badge bg-white text-secondary border small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Shortcuts: <b>z</b>=NIL &middot; Stool: <b>ss/py</b>, <b>yl/br</b>, <b>p/a</b>, <b>n</b> &middot; RH: <b>p/n</b></span>
           </div>
           <div class="d-flex gap-2">
             <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" style="font-size:0.75rem;" onclick="clearForm21Values(${i})"><i class="bi bi-eraser me-1"></i>Clear Values</button>
@@ -1454,8 +1454,12 @@ function initEditorEvents() {
   }
 
   // Quick shortcuts handler:
-  // 1. In Blood RH field: 'p'/'P' -> 'POSITIVE', 'n'/'N' -> 'NEGATIVE'
-  // 2. In ANY field: 'z'/'Z' -> 'NIL'
+  // 1. Blood RH: 'p'/'P' -> 'POSITIVE', 'n'/'N' -> 'NEGATIVE'
+  // 2. Stool CONSISTANCY: 'ss'/'SS' -> 'SEMI SOLID', 'py'/'PY' -> 'PALE YELLOW'
+  // 3. Stool MUCUS: 'p'/'P' -> 'PRESENT', 'a'/'A' -> 'ABSENT'
+  // 4. Stool REMARK: 'n'/'N' -> 'NORMAL'
+  // 5. COLOR (Stool & Urine): 'yl' -> 'YELLOWISH', 'br' -> 'BROWNISH', 'py' -> 'PALE YELLOW', 'r' -> 'REDDISH', 'n' -> 'NORMAL'
+  // 6. ANY field: 'z'/'Z' -> 'NIL'
   function applyQuickTextShortcuts(inp) {
     if (!inp || inp.tagName !== 'INPUT' || inp.readOnly || inp.disabled) return false;
     if (inp.dataset.f !== 'value') return false;
@@ -1463,6 +1467,7 @@ function initEditorEvents() {
     const raw = (inp.value || '').trim();
     if (!raw) return false;
     const lower = raw.toLowerCase();
+    const pName = (inp.dataset.param || '').trim().toLowerCase();
 
     let replacement = null;
 
@@ -1475,21 +1480,62 @@ function initEditorEvents() {
       }
     }
 
-    // 2. Urine Color shortcuts:
-    // py / PY -> PALE YELLOW, r / R -> REDDISH, n / N -> NORMAL, yl / YL -> YELLOWISH
-    if (!replacement && isUrineColorField(inp)) {
-      if (lower === 'py' || lower === 'pele yellow' || lower === 'pale yellow') {
+    // 2. Stool Consistency shortcut:
+    // ss / SS -> SEMI SOLID, py / PY -> PALE YELLOW
+    const isConsistency = (pName === 'consistancy' || pName === 'consistency' || pName.includes('consistan') || pName.includes('consisten'));
+    if (!replacement && isConsistency) {
+      if (lower === 'ss' || lower === 'semi solid') {
+        replacement = 'SEMI SOLID';
+      } else if (lower === 'py' || lower === 'pele yellow' || lower === 'pale yellow') {
+        replacement = 'PALE YELLOW';
+      } else if (lower === 's' || lower === 'solid') {
+        replacement = 'SOLID';
+      } else if (lower === 'l' || lower === 'loose') {
+        replacement = 'LOOSE';
+      } else if (lower === 'w' || lower === 'watery') {
+        replacement = 'WATERY';
+      }
+    }
+
+    // 3. Stool Mucus shortcut:
+    // p / P -> PRESENT, a / A -> ABSENT
+    const isMucus = (pName === 'mucus');
+    if (!replacement && isMucus) {
+      if (lower === 'p' || lower === 'present' || lower === '+') {
+        replacement = 'PRESENT';
+      } else if (lower === 'a' || lower === 'absent' || lower === '-') {
+        replacement = 'ABSENT';
+      }
+    }
+
+    // 4. Remark shortcut:
+    // n / N -> NORMAL
+    const isRemark = (pName === 'remark');
+    if (!replacement && isRemark) {
+      if (lower === 'n' || lower === 'normal') {
+        replacement = 'NORMAL';
+      }
+    }
+
+    // 5. Color shortcuts (Urine & Stool):
+    // Stool: yl / YL -> YELLOWISH, br / BR -> BROWNISH, py -> PALE YELLOW
+    // Urine: py / PY -> PALE YELLOW, r / R -> REDDISH, n / N -> NORMAL, yl / YL -> YELLOWISH
+    const isColor = (pName === 'colour' || pName === 'color' || pName.includes('colour') || pName.includes('color'));
+    if (!replacement && isColor) {
+      if (lower === 'br' || lower === 'brownish' || lower === 'brown') {
+        replacement = 'BROWNISH';
+      } else if (lower === 'yl' || lower === 'yellowish' || lower === 'yellow') {
+        replacement = 'YELLOWISH';
+      } else if (lower === 'py' || lower === 'pele yellow' || lower === 'pale yellow') {
         replacement = 'PALE YELLOW';
       } else if (lower === 'r' || lower === 'reddish' || lower === 'red') {
         replacement = 'REDDISH';
       } else if (lower === 'n' || lower === 'normal') {
         replacement = 'NORMAL';
-      } else if (lower === 'yl' || lower === 'yellowish' || lower === 'yellow') {
-        replacement = 'YELLOWISH';
       }
     }
 
-    // 3. ANY field shortcut: 'z'/'Z' -> 'NIL'
+    // 6. ANY field shortcut: 'z'/'Z' -> 'NIL'
     if (!replacement && lower === 'z') {
       replacement = 'NIL';
     }
