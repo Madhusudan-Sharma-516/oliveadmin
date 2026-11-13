@@ -1148,7 +1148,7 @@ function renderEditorRows() {
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="badge bg-primary text-white"><i class="bi bi-file-earmark-medical me-1"></i>Form 21 &middot; 4 Pages</span>
             <span class="small text-muted">Page 1: Haematology &middot; Page 2: Biochemistry &amp; Lipid &middot; Page 3: Urine &middot; Page 4: Serology &amp; Stool</span>
-            <span class="badge bg-white text-secondary border small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Shortcuts: <b>z</b>=NIL &middot; Stool: <b>ss/py</b>, <b>yl/br</b>, <b>p/a</b>, <b>n</b> &middot; RH: <b>p/n</b></span>
+            <span class="badge bg-white text-secondary border small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Shortcuts: <b>z</b>=NIL &middot; Color: <b>y/yl</b>=Yellowish, <b>b/br</b>=Brownish &middot; Stool: <b>ss/py</b>, <b>p/a</b>, <b>n</b> &middot; RH: <b>p/n</b></span>
           </div>
           <div class="d-flex gap-2">
             <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" style="font-size:0.75rem;" onclick="clearForm21Values(${i})"><i class="bi bi-eraser me-1"></i>Clear Values</button>
@@ -1156,6 +1156,25 @@ function renderEditorRows() {
             <button type="button" class="btn btn-xs btn-outline-primary py-1 px-2" style="font-size:0.75rem;" onclick="calculateLipidProfile(${i})"><i class="bi bi-calculator me-1"></i>Calculate Lipid</button>
           </div>
         </div>
+      `;
+    } else if (tmpl.id === 'stool_examination') {
+      extraHtml = `
+        <div class="p-2 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge bg-primary text-white"><i class="bi bi-file-earmark-medical me-1"></i>Stool Examination</span>
+            <span class="badge bg-white text-secondary border small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Shortcuts: Color: <b>y/yl</b>=Yellowish, <b>b/br</b>=Brownish, <b>py</b>=Pale yellow | Consistency: <b>ss</b>=Semi solid | Mucus: <b>p/a</b> | <b>z</b>=NIL</span>
+          </div>
+        </div>
+        <div class="p-2 border-top bg-light-subtle test-remark-box">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small fw-semibold text-secondary">
+              <i class="bi bi-chat-left-dots text-primary me-1"></i>Remark / Interpretation (${esc(tmpl.title || t.name)}):
+            </span>
+            ${st.remark ? `<button type="button" class="btn btn-xs btn-outline-danger py-0 px-2" style="font-size:0.72rem;" onclick="clearTestRemark(${i})"><i class="bi bi-x me-1"></i>Clear</button>` : ''}
+          </div>
+          <input type="text" id="testRemark_${i}" class="form-control form-control-sm form-control-result test-remark-input" data-test-idx="${i}" data-f="remark" value="${esc(st.remark || '')}" placeholder="Optional remark / interpretation...">
+        </div>
+        ${tmpl.method ? `<div class="p-2 bg-light border-top text-muted small"><i class="bi bi-info-circle me-1"></i>${esc(tmpl.method)}</div>` : ''}
       `;
     } else if (tmpl.id === 'lipid') {
       extraHtml = `
@@ -1478,7 +1497,14 @@ function initEditorEvents() {
     const raw = (inp.value || '').trim();
     if (!raw) return false;
     const lower = raw.toLowerCase();
-    const pName = (inp.dataset.param || '').trim().toLowerCase();
+    let pName = (inp.dataset.param || '').trim().toLowerCase();
+    if (!pName) {
+      const row = inp.closest('tr');
+      if (row) {
+        const firstTd = row.querySelector('td:first-child');
+        pName = (firstTd?.textContent || '').trim().toLowerCase();
+      }
+    }
 
     let replacement = null;
 
@@ -1533,9 +1559,9 @@ function initEditorEvents() {
     // Urine: py / PY -> PALE YELLOW, r / R -> REDDISH, n / N -> NORMAL, yl / YL -> YELLOWISH
     const isColor = (pName === 'colour' || pName === 'color' || pName.includes('colour') || pName.includes('color'));
     if (!replacement && isColor) {
-      if (lower === 'br' || lower === 'brownish' || lower === 'brown') {
+      if (lower === 'br' || lower === 'b' || lower === 'brownish' || lower === 'brown' || lower === 'borownish') {
         replacement = 'BROWNISH';
-      } else if (lower === 'yl' || lower === 'yellowish' || lower === 'yellow') {
+      } else if (lower === 'yl' || lower === 'y' || lower === 'yellowish' || lower === 'yellowis' || lower === 'yellow') {
         replacement = 'YELLOWISH';
       } else if (lower === 'py' || lower === 'pele yellow' || lower === 'pale yellow') {
         replacement = 'PALE YELLOW';
@@ -1543,6 +1569,8 @@ function initEditorEvents() {
         replacement = 'REDDISH';
       } else if (lower === 'n' || lower === 'normal') {
         replacement = 'NORMAL';
+      } else if (lower === 'g' || lower === 'gr' || lower === 'greenish' || lower === 'green') {
+        replacement = 'GREENISH';
       }
     }
 
