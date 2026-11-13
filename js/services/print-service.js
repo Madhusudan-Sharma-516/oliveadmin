@@ -194,18 +194,18 @@ function renderReportPage({
             <b>METHOD :</b> Qualitative and Semi-Quantitative Slide / Tube Agglutination Method.
           </div>
         ` : `
-          <div style="border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 3px 0; margin-bottom: 8px; font-weight: bold; font-size: 12px; display: flex;">
+          <div style="border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 4px 0; margin-bottom: 8px; font-weight: bold; font-size: 13px; display: flex;">
             <div style="width: 44%;">Investigation</div>
             <div style="width: 18%;">Result</div>
             <div style="width: 16%;">Unit</div>
             <div style="width: 22%;">Reference range</div>
           </div>
 
-          <div style="text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 8px; text-decoration: underline; letter-spacing: 0.5px;">
+          <div style="text-align: center; font-size: 14.5px; font-weight: bold; margin-bottom: 8px; text-decoration: underline; letter-spacing: 0.5px;">
             ${esc(testTitle)}
           </div>
 
-          <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+          <table style="width: 100%; table-layout: fixed; font-size: 13px; border-collapse: collapse;">
             <tbody>
               ${rowsHtml}
             </tbody>
@@ -235,7 +235,7 @@ function renderReportPage({
             <div style="font-weight: bold; font-size: 10.5px; text-decoration: underline; margin-bottom: 2px; letter-spacing: 0.5px;">REMARK : ${esc(testTitle)}</div>
             <div style="white-space: pre-line; line-height: 1.45; font-weight: bold; font-size: 10px;">${esc(remarkText)}</div>
           </div>` : ''}
-        ${(methodText && !isWidal) ? `<div style="margin-top: 8px; font-size: 11px;">${esc(methodText)}</div>` : ''}
+        ${(methodText && !isWidal) ? `<div style="margin-top: 8px; font-size: 11.5px;">${esc(methodText)}</div>` : ''}
         ${printDoctorRemarks && r.remarks ? `<div style="margin-top: 8px; font-size: 11.5px;"><b>Remarks:</b> ${esc(r.remarks)}</div>` : ''}
       </div>
 
@@ -288,7 +288,7 @@ function getReportHtml(r) {
 
         const rowsHtml = (pDef.items || []).map(item => {
           if (item.isHeader) {
-            return `<tr><td colspan="4" style="font-weight: bold; text-decoration: underline; padding-top: 6px; padding-bottom: 2px; font-size: 12px;">${esc(item.title)}</td></tr>`;
+            return `<tr><td colspan="4" style="font-weight: bold; text-decoration: underline; padding-top: 6px; padding-bottom: 2px; font-size: 13px;">${esc(item.title)}</td></tr>`;
           }
           const p = (x.params && x.params[item.name]) || {};
           const val = p.value !== undefined && p.value !== '' ? p.value : (item.defaultVal || '');
@@ -301,11 +301,11 @@ function getReportHtml(r) {
             <span style="font-weight: 900; color: #b91c1c;">${esc(val)}${flag}</span>
           ` : `<span>${esc(val)}</span>`;
           return `
-            <tr style="line-height: 1.45; border-bottom: 1px solid #f1f5f9;">
-              <td style="width: 44%; padding: 2px 0; ${indentStyle}">${esc(item.name)}</td>
-              <td style="width: 18%; padding: 2px 0; font-weight: bold;">${valDisplay}</td>
-              <td style="width: 16%; padding: 2px 0;">${esc(u)}</td>
-              <td style="width: 22%; padding: 2px 0;">${esc(rng)}</td>
+            <tr style="line-height: 1.48; border-bottom: 1px solid #f1f5f9;">
+              <td style="width: 44%; padding: 2.8px 0; ${indentStyle}">${esc(item.name)}</td>
+              <td style="width: 18%; padding: 2.8px 0; font-weight: bold;">${valDisplay}</td>
+              <td style="width: 16%; padding: 2.8px 0;">${esc(u)}</td>
+              <td style="width: 22%; padding: 2.8px 0;">${esc(rng)}</td>
             </tr>
           `;
         }).join('');
@@ -341,7 +341,7 @@ function getReportHtml(r) {
     if (isDetailed && tmpl) {
       rowsHtml = tmpl.items.map(item => {
         if (item.isHeader) {
-          return `<tr><td colspan="4" style="font-weight: bold; text-decoration: underline; padding-top: 6px; padding-bottom: 2px; font-size: 12px;">${esc(item.title)}</td></tr>`;
+          return `<tr><td colspan="4" style="font-weight: bold; text-decoration: underline; padding-top: 6px; padding-bottom: 2px; font-size: 13px;">${esc(item.title)}</td></tr>`;
         }
         const p = (x.params && x.params[item.name]) || {};
         const val = p.value !== undefined && p.value !== '' ? p.value : (item.defaultVal || '');
@@ -354,11 +354,11 @@ function getReportHtml(r) {
           <span style="font-weight: 900; color: #b91c1c;">${esc(val)}${flag}</span>
         ` : `<span>${esc(val)}</span>`;
         return `
-          <tr style="line-height: 1.45; border-bottom: 1px solid #f1f5f9;">
-            <td style="width: 44%; padding: 2px 0; ${indentStyle}">${esc(item.name)}</td>
-            <td style="width: 18%; padding: 2px 0; font-weight: bold;">${valDisplay}</td>
-            <td style="width: 16%; padding: 2px 0;">${esc(u)}</td>
-            <td style="width: 22%; padding: 2px 0;">${esc(rng)}</td>
+          <tr style="line-height: 1.48; border-bottom: 1px solid #f1f5f9;">
+            <td style="width: 44%; padding: 2.8px 0; ${indentStyle}">${esc(item.name)}</td>
+            <td style="width: 18%; padding: 2.8px 0; font-weight: bold;">${valDisplay}</td>
+            <td style="width: 16%; padding: 2.8px 0;">${esc(u)}</td>
+            <td style="width: 22%; padding: 2.8px 0;">${esc(rng)}</td>
           </tr>
         `;
       }).join('');
@@ -373,10 +373,10 @@ function getReportHtml(r) {
       ` : `<span>${esc(val)}</span>`;
       rowsHtml = `
         <tr style="line-height: 1.5; border-bottom: 1px solid #f1f5f9;">
-          <td style="width: 44%; padding: 3px 0; font-weight: 500;">${esc(t.name)}</td>
-          <td style="width: 18%; padding: 3px 0; font-weight: bold;">${valDisplay}</td>
-          <td style="width: 16%; padding: 3px 0;">${esc(u)}</td>
-          <td style="width: 22%; padding: 3px 0;">${esc(rng)}</td>
+          <td style="width: 44%; padding: 3.5px 0; font-weight: 500;">${esc(t.name)}</td>
+          <td style="width: 18%; padding: 3.5px 0; font-weight: bold;">${valDisplay}</td>
+          <td style="width: 16%; padding: 3.5px 0;">${esc(u)}</td>
+          <td style="width: 22%; padding: 3.5px 0;">${esc(rng)}</td>
         </tr>
       `;
     }
