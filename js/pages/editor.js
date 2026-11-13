@@ -1257,9 +1257,19 @@ function getVisibleResultInputs() {
 
 function focusAndSelectInput(inp) {
   if (!inp) return;
-  inp.focus();
+  // Use preventScroll to avoid sudden browser jumps before smooth scroll
+  try {
+    inp.focus({ preventScroll: true });
+  } catch (err) {
+    inp.focus();
+  }
   try { inp.select(); } catch (err) { }
-  inp.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  // Smoothly center the active input in the viewport row-by-row
+  try {
+    inp.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+  } catch (err) {
+    inp.scrollIntoView(false);
+  }
 }
 
 function getCaretPositions(inp) {
