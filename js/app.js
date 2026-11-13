@@ -5,6 +5,14 @@
    ========================================================================== */
 
 function show(v) {
+  // Auto-save pending report draft to localStorage if navigating away from editor
+  if (typeof editing !== 'undefined' && editing && typeof saveEditor === 'function') {
+    const editorView = $('view-editor');
+    if (editorView && editorView.classList.contains('show') && v !== 'editor') {
+      try { saveEditor(); } catch (err) { console.error('Auto-save on view exit error:', err); }
+    }
+  }
+
   // Toggle visibility of views
   document.querySelectorAll('.view').forEach(s => {
     s.classList.toggle('show', s.id === 'view-' + v);
@@ -77,11 +85,14 @@ window.addEventListener('keydown', e => {
     return;
   }
 
-  // 2. Escape key shortcut: Go back to Pending queue if inside Editor
+  // 2. Escape key shortcut: Auto-save draft and go back to Pending queue if inside Editor
   if (e.key === 'Escape') {
     const editorView = $('view-editor');
     if (editorView && editorView.classList.contains('show')) {
       e.preventDefault();
+      if (typeof editing !== 'undefined' && editing && typeof saveEditor === 'function') {
+        try { saveEditor(); } catch (_) { }
+      }
       show('pending');
     }
   }
@@ -369,3 +380,10 @@ if (savedSession) {
     sessionStorage.removeItem('user');
   }
 }
+
+// Auto-save pending or active report to localStorage on page refresh or browser close
+window.addEventListener('beforeunload', () => {
+  if (typeof editing !== 'undefined' && editing && typeof saveEditor === 'function') {
+    try { saveEditor(); } catch (_) { }
+  }
+});

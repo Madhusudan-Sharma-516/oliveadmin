@@ -304,7 +304,10 @@
             <div class="card-body">
               <div class="d-flex justify-content-between flex-wrap mb-3">
                 <div>
-                  <div class="fw-bold fs-5" id="edPatient"></div>
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="fw-bold fs-5" id="edPatient"></span>
+                    <span id="edSaveIndicator" class="badge bg-light text-success border border-success-subtle small" title="Auto-saved to browser local storage"><i class="bi bi-check-circle-fill text-success me-1"></i>Saved Locally</span>
+                  </div>
                   <div class="text-muted" id="edMeta"></div>
                 </div>
                 <button class="btn btn-outline-secondary align-self-start" id="edBack"><i class="bi bi-arrow-left me-1"></i>Back</button>

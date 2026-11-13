@@ -571,6 +571,7 @@ window.toggleWidalCell = function(testIdx, agId, dilution) {
 
   updateWidalAutoImpression(testIdx);
   renderEditorRows();
+  scheduleEditorAutoSave();
 };
 
 window.updateWidalAutoImpression = function(testIdx) {
@@ -1654,13 +1655,30 @@ function initEditorEvents() {
     }
   });
 
+  edRowsEl.addEventListener('input', () => {
+    scheduleEditorAutoSave();
+  });
+
   edRowsEl.addEventListener('change', e => {
     applyQuickTextShortcuts(e.target);
+    scheduleEditorAutoSave();
   });
 
   edRowsEl.addEventListener('blur', e => {
     applyQuickTextShortcuts(e.target);
+    scheduleEditorAutoSave();
   }, true);
+
+  ['edRemarks', 'edAdvance', 'edDoctor', 'edRDate', 'edRTime', 'edSignDoctorName', 'edSignDoctorDegree'].forEach(id => {
+    const el = $(id);
+    if (el) {
+      el.addEventListener('input', scheduleEditorAutoSave);
+      el.addEventListener('change', scheduleEditorAutoSave);
+    }
+  });
+
+  const edInc = $('edIncludeSign');
+  if (edInc) edInc.addEventListener('change', scheduleEditorAutoSave);
 }
 
 window.openEditor = labNo => {
@@ -1784,7 +1802,45 @@ window.openEditor = labNo => {
       try { firstResult.select(); } catch (err) { }
     }
   }, 100);
+
+  updateSaveIndicator(r.status === 'done' ? 'Completed & Saved Locally' : (r.results && Object.keys(r.results).length > 0 ? 'Draft Loaded from Storage' : 'Saved Locally'));
 };
+
+
+// ==========================================================================
+// LocalStorage Auto-Save & Save Status Indicator
+// Ensures pending drafts and complete reports are continuously persisted locally
+// ==========================================================================
+let _autoSaveTimer = null;
+
+function updateSaveIndicator(text, isSaving = false) {
+  const ind = $('edSaveIndicator');
+  if (!ind) return;
+  if (isSaving) {
+    ind.className = 'badge bg-warning-subtle text-dark border border-warning small ms-2 align-middle';
+    ind.innerHTML = '<span class="spinner-border spinner-border-sm me-1" style="width:0.65rem;height:0.65rem;" role="status"></span>Saving...';
+  } else {
+    ind.className = 'badge bg-light text-success border border-success-subtle small ms-2 align-middle';
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    ind.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i>${text || 'Saved Locally'} <span class="text-muted fw-normal" style="font-size:0.7rem;">(${timeStr})</span>`;
+  }
+}
+
+function scheduleEditorAutoSave() {
+  if (!editing) return;
+  updateSaveIndicator('Saving...', true);
+  if (_autoSaveTimer) clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => {
+    try {
+      saveEditor();
+    } catch (e) {
+      console.error('Auto-save error:', e);
+    }
+  }, 600);
+}
+window.scheduleEditorAutoSave = scheduleEditorAutoSave;
+window.updateSaveIndicator = updateSaveIndicator;
 
 function saveEditor(status) {
   snapshotEditorInputs();
@@ -1847,6 +1903,7 @@ function saveEditor(status) {
 
   persist();
   if (typeof updateBadge === 'function') updateBadge();
+  updateSaveIndicator(r.status === 'done' ? 'Completed & Saved Locally' : 'Saved Locally');
   return r;
 }
 
@@ -1892,7 +1949,12 @@ function initEditorButtons() {
 
   const edBack = $('edBack');
   if (edBack) {
-    edBack.onclick = () => show('pending');
+    edBack.onclick = () => {
+      if (editing) {
+        try { saveEditor(); } catch (_) { }
+      }
+      show('pending');
+    };
   }
 
   initSignatureHandlers();

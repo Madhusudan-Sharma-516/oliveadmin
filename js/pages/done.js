@@ -10,10 +10,13 @@ function renderDone() {
   
   doneTable.innerHTML = list.length ? list.map(r => `
     <tr>
-      <td>${esc(r.labNo)}</td>
-      <td>${esc(r.name)}</td>
-      <td>${r.tests.map(t => esc(t.name)).join(', ')}</td>
-      <td>${esc(r.reportedBy)}</td>
+      <td><b>${esc(r.labNo)}</b></td>
+      <td>
+        <div class="fw-semibold">${esc(r.name)}</div>
+        <span class="badge bg-success-subtle text-success border border-success small" style="font-size:0.72rem;"><i class="bi bi-check2-circle me-1"></i>Saved Locally</span>
+      </td>
+      <td>${r.tests.map(t => `<span class="badge bg-light text-dark border me-1">${esc(t.name)}</span>`).join('')}</td>
+      <td>${esc(r.reportedBy || 'Pathologist')}</td>
       <td class="text-end text-nowrap">
         <button class="btn btn-sm btn-outline-primary me-1" title="Edit" onclick="openEditor('${esc(r.labNo)}')">
           <i class="bi bi-pencil"></i>
