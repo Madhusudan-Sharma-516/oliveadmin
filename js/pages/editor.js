@@ -1141,9 +1141,10 @@ function renderEditorRows() {
     } else if (tmpl.id === 'form_21') {
       extraHtml = `
         <div class="p-2 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <div class="d-flex align-items-center gap-2">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="badge bg-primary text-white"><i class="bi bi-file-earmark-medical me-1"></i>Form 21 &middot; 4 Pages</span>
             <span class="small text-muted">Page 1: Haematology &middot; Page 2: Biochemistry &amp; Lipid &middot; Page 3: Urine &middot; Page 4: Serology &amp; Stool</span>
+            <span class="badge bg-white text-secondary border small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Shortcuts: <b>z</b> = NIL &middot; RH: <b>p</b> = POSITIVE, <b>n</b> = NEGATIVE</span>
           </div>
           <div class="d-flex gap-2">
             <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" style="font-size:0.75rem;" onclick="clearForm21Values(${i})"><i class="bi bi-eraser me-1"></i>Clear Values</button>
@@ -1389,6 +1390,64 @@ function initEditorEvents() {
     }
   };
 
+  // Helper to detect if an input field is for Blood RH (Rh Factor / Rh Type)
+  function isRhInputField(inp) {
+    if (!inp || !inp.dataset) return false;
+    const p = (inp.dataset.param || '').trim().toLowerCase();
+    if (p === 'rh' || p === 'rh factor' || p === 'rh type' || p === 'rh (d)' || p === 'rh factor (du)' || p.startsWith('rh ')) {
+      return true;
+    }
+    const idx = parseInt(inp.dataset.testIdx, 10);
+    const r = typeof editing !== 'undefined' ? find(editing) : null;
+    const testName = (r?.tests?.[idx]?.name || '').trim().toLowerCase();
+    if (testName === 'rh' || testName === 'rh factor' || testName === 'rh factor (du)') {
+      return true;
+    }
+    const row = inp.closest('tr');
+    if (row) {
+      const labelTd = row.querySelector('td:first-child');
+      const labelText = (labelTd?.textContent || '').trim().toLowerCase();
+      if (labelText === 'rh' || labelText === 'rh factor' || labelText === 'rh type') {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Quick shortcuts handler:
+  // 1. In Blood RH field: 'p'/'P' -> 'POSITIVE', 'n'/'N' -> 'NEGATIVE'
+  // 2. In ANY field: 'z'/'Z' -> 'NIL'
+  function applyQuickTextShortcuts(inp) {
+    if (!inp || inp.tagName !== 'INPUT' || inp.readOnly || inp.disabled) return false;
+    if (inp.dataset.f !== 'value') return false;
+
+    const raw = (inp.value || '').trim();
+    if (!raw) return false;
+    const lower = raw.toLowerCase();
+
+    let replacement = null;
+
+    if (isRhInputField(inp)) {
+      if (lower === 'p' || lower === 'pos' || lower === '+') {
+        replacement = 'POSITIVE';
+      } else if (lower === 'n' || lower === 'neg' || lower === '-') {
+        replacement = 'NEGATIVE';
+      }
+    }
+
+    if (!replacement && lower === 'z') {
+      replacement = 'NIL';
+    }
+
+    if (replacement !== null && inp.value !== replacement) {
+      inp.value = replacement;
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+      inp.dispatchEvent(new Event('change', { bubbles: true }));
+      return true;
+    }
+    return false;
+  }
+
   edRowsEl.addEventListener('keydown', e => {
     const target = e.target;
     if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
@@ -1411,6 +1470,7 @@ function initEditorEvents() {
         return;
       }
       e.preventDefault();
+      applyQuickTextShortcuts(target);
       if (e.shiftKey) {
         const prev = findInputVertical(target, 'up');
         if (prev) focusAndSelectInput(prev);
@@ -1418,7 +1478,10 @@ function initEditorEvents() {
         const next = findInputVertical(target, 'down');
         if (next) focusAndSelectInput(next);
       }
+    } else if (e.key === 'Tab') {
+      applyQuickTextShortcuts(target);
     } else if (e.key === 'ArrowDown') {
+      applyQuickTextShortcuts(target);
       if (target.tagName === 'TEXTAREA') {
         const { start, end } = getCaretPositions(target);
         const valLen = (target.value || '').length;
@@ -1436,6 +1499,7 @@ function initEditorEvents() {
         if (next) focusAndSelectInput(next);
       }
     } else if (e.key === 'ArrowUp') {
+      applyQuickTextShortcuts(target);
       if (target.tagName === 'TEXTAREA') {
         const { start, end } = getCaretPositions(target);
         const valLen = (target.value || '').length;
@@ -1478,6 +1542,14 @@ function initEditorEvents() {
       }
     }
   });
+
+  edRowsEl.addEventListener('change', e => {
+    applyQuickTextShortcuts(e.target);
+  });
+
+  edRowsEl.addEventListener('blur', e => {
+    applyQuickTextShortcuts(e.target);
+  }, true);
 }
 
 window.openEditor = labNo => {

@@ -14,8 +14,8 @@ function checkValueRange(valStr, rangeStr) {
   if (isNaN(v)) {
     const uVal = rawVal.toUpperCase();
     const uRng = rawRng.toUpperCase();
-    if (uRng === 'NIL' || uRng === 'NEGATIVE') {
-      const normalTokens = ['NIL', 'NEGATIVE', 'NEG', '0', '-', 'CLEAR', 'ACIDIC', 'PALE YELLOW', 'NORMAL'];
+    if (uRng === 'NIL' || uRng === 'NILL' || uRng === 'NEGATIVE') {
+      const normalTokens = ['NIL', 'NILL', 'NEGATIVE', 'NEG', '0', '-', 'CLEAR', 'ACIDIC', 'PALE YELLOW', 'NORMAL'];
       if (!normalTokens.includes(uVal)) {
         return 'abnormal';
       }
