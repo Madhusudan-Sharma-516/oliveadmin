@@ -1109,8 +1109,11 @@ function renderEditorRows() {
     if (tmpl.id === 'urine') {
       extraHtml = `
         <div class="p-2 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <button type="button" class="btn btn-sm btn-outline-success" onclick="fillUrineDefaults(${i})"><i class="bi bi-magic me-1"></i>Quick Fill Normal Values</button>
-          <span class="small text-muted"><i class="bi bi-info-circle me-1"></i>Siemens Clinitek Status+ Urine Analyzer</span>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button type="button" class="btn btn-sm btn-outline-success" onclick="fillUrineDefaults(${i})"><i class="bi bi-magic me-1"></i>Quick Fill Normal Values</button>
+            <span class="badge bg-white text-secondary border small"><i class="bi bi-palette me-1"></i>Color: <b>py</b> = Pale yellow &middot; <b>r</b> = Reddish &middot; <b>n</b> = Normal &middot; <b>yl</b> = Yellowish</span>
+          </div>
+          <span class="small text-muted d-none d-md-inline"><i class="bi bi-info-circle me-1"></i>Siemens Clinitek Status+ Urine Analyzer</span>
         </div>
         <div class="p-3 border-top urine-remark-box">
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
@@ -1144,7 +1147,7 @@ function renderEditorRows() {
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="badge bg-primary text-white"><i class="bi bi-file-earmark-medical me-1"></i>Form 21 &middot; 4 Pages</span>
             <span class="small text-muted">Page 1: Haematology &middot; Page 2: Biochemistry &amp; Lipid &middot; Page 3: Urine &middot; Page 4: Serology &amp; Stool</span>
-            <span class="badge bg-white text-secondary border small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Shortcuts: <b>z</b> = NIL &middot; RH: <b>p</b> = POSITIVE, <b>n</b> = NEGATIVE</span>
+            <span class="badge bg-white text-secondary border small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Shortcuts: <b>z</b> = NIL &middot; Color: <b>py</b>, <b>r</b>, <b>n</b>, <b>yl</b> &middot; RH: <b>p</b>, <b>n</b></span>
           </div>
           <div class="d-flex gap-2">
             <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" style="font-size:0.75rem;" onclick="clearForm21Values(${i})"><i class="bi bi-eraser me-1"></i>Clear Values</button>
@@ -1414,6 +1417,42 @@ function initEditorEvents() {
     return false;
   }
 
+  // Helper to detect if an input field is for Urine Color
+  function isUrineColorField(inp) {
+    if (!inp || !inp.dataset) return false;
+    const p = (inp.dataset.param || '').trim().toLowerCase();
+    const isColorParam = (p === 'colour' || p === 'color' || p === 'urine colour' || p === 'urine color');
+    if (!isColorParam) return false;
+
+    const idx = parseInt(inp.dataset.testIdx, 10);
+    const r = typeof editing !== 'undefined' ? find(editing) : null;
+    const testObj = r?.tests?.[idx];
+    const testName = (testObj?.name || '').trim().toLowerCase();
+
+    if (testName.includes('urine') || testName.includes('urinary')) return true;
+
+    // Check row context (e.g. in Form 21, distinguish Urine Colour vs Stool Colour)
+    const row = inp.closest('tr');
+    if (row) {
+      let prev = row.previousElementSibling;
+      while (prev) {
+        if (prev.classList.contains('param-cat-row') || prev.querySelector('th, td[colspan]')) {
+          const text = (prev.textContent || '').toLowerCase();
+          if (text.includes('urine')) return true;
+          if (text.includes('stool')) return false;
+        }
+        prev = prev.previousElementSibling;
+      }
+    }
+
+    const st = typeof editorState !== 'undefined' ? editorState[idx] : null;
+    const tmplId = (st?.templateId || '').toLowerCase();
+    if (tmplId.includes('urine')) return true;
+
+    if (!testName.includes('stool')) return true;
+    return false;
+  }
+
   // Quick shortcuts handler:
   // 1. In Blood RH field: 'p'/'P' -> 'POSITIVE', 'n'/'N' -> 'NEGATIVE'
   // 2. In ANY field: 'z'/'Z' -> 'NIL'
@@ -1427,6 +1466,7 @@ function initEditorEvents() {
 
     let replacement = null;
 
+    // 1. Blood RH field shortcut: 'p'/'P' -> 'POSITIVE', 'n'/'N' -> 'NEGATIVE'
     if (isRhInputField(inp)) {
       if (lower === 'p' || lower === 'pos' || lower === '+') {
         replacement = 'POSITIVE';
@@ -1435,6 +1475,21 @@ function initEditorEvents() {
       }
     }
 
+    // 2. Urine Color shortcuts:
+    // py / PY -> PALE YELLOW, r / R -> REDDISH, n / N -> NORMAL, yl / YL -> YELLOWISH
+    if (!replacement && isUrineColorField(inp)) {
+      if (lower === 'py' || lower === 'pele yellow' || lower === 'pale yellow') {
+        replacement = 'PALE YELLOW';
+      } else if (lower === 'r' || lower === 'reddish' || lower === 'red') {
+        replacement = 'REDDISH';
+      } else if (lower === 'n' || lower === 'normal') {
+        replacement = 'NORMAL';
+      } else if (lower === 'yl' || lower === 'yellowish' || lower === 'yellow') {
+        replacement = 'YELLOWISH';
+      }
+    }
+
+    // 3. ANY field shortcut: 'z'/'Z' -> 'NIL'
     if (!replacement && lower === 'z') {
       replacement = 'NIL';
     }
