@@ -114,7 +114,8 @@ window.fillForm21SampleDefaults = idx => {
   editorState[idx].params = editorState[idx].params || {};
   tmpl.items.forEach(it => {
     if (!it.isHeader) {
-      editorState[idx].params[it.name] = {
+      const pKey = it.paramKey || it.name;
+      editorState[idx].params[pKey] = {
         value: it.sampleVal || it.defaultVal || '',
         unit: it.unit || '',
         range: it.range || ''
@@ -132,7 +133,8 @@ window.clearForm21Values = idx => {
   editorState[idx].params = {};
   tmpl.items.forEach(it => {
     if (!it.isHeader) {
-      editorState[idx].params[it.name] = {
+      const pKey = it.paramKey || it.name;
+      editorState[idx].params[pKey] = {
         value: '',
         unit: it.unit || '',
         range: it.range || ''
@@ -1092,7 +1094,8 @@ function renderEditorRows() {
       if (item.isHeader) {
         return `<tr class="param-cat-row"><td colspan="4"><i class="bi bi-folder2 me-1"></i>${esc(item.title)}</td></tr>`;
       }
-      const pData = (st.params && st.params[item.name]) || {};
+      const pKey = item.paramKey || item.name;
+      const pData = (st.params && (st.params[pKey] !== undefined ? st.params[pKey] : st.params[item.name])) || {};
       const pVal = pData.value !== undefined ? pData.value : (item.defaultVal || '');
       const rangeStatus = checkValueRange(pVal, item.range);
       const isAbnormal = rangeStatus === 'high' || rangeStatus === 'low' || rangeStatus === 'abnormal';
@@ -1100,9 +1103,9 @@ function renderEditorRows() {
         <td class="${item.indent ? 'param-indent fw-medium text-dark' : 'fw-bold text-dark'}" style="font-size:0.94rem;">
           ${item.indent ? '<i class="bi bi-dash text-secondary me-1"></i>' : ''}${esc(item.name)}
         </td>
-        <td><input class="form-control form-control-sm form-control-result ${isAbnormal ? 'is-abnormal-input' : ''}" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="value" value="${esc(pVal)}" placeholder="Enter result..."></td>
-        <td><input class="form-control form-control-sm bg-light text-dark fw-medium border-0" readonly tabindex="-1" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="unit" value="${esc(item.unit)}"></td>
-        <td><input class="form-control form-control-sm bg-light text-dark fw-medium border-0" readonly tabindex="-1" data-test-idx="${i}" data-param="${esc(item.name)}" data-f="range" value="${esc(item.range)}"></td>
+        <td><input class="form-control form-control-sm form-control-result ${isAbnormal ? 'is-abnormal-input' : ''}" data-test-idx="${i}" data-param="${esc(pKey)}" data-f="value" value="${esc(pVal)}" placeholder="Enter result..."></td>
+        <td><input class="form-control form-control-sm bg-light text-dark fw-medium border-0" readonly tabindex="-1" data-test-idx="${i}" data-param="${esc(pKey)}" data-f="unit" value="${esc(item.unit)}"></td>
+        <td><input class="form-control form-control-sm bg-light text-dark fw-medium border-0" readonly tabindex="-1" data-test-idx="${i}" data-param="${esc(pKey)}" data-f="range" value="${esc(item.range)}"></td>
       </tr>`;
     }).join('');
 
@@ -1780,7 +1783,8 @@ window.openEditor = labNo => {
         if (tmpl.id === 'form_21') {
           (tmpl.items || []).forEach(it => {
             if (!it.isHeader) {
-              defaultParams[it.name] = {
+              const pKey = it.paramKey || it.name;
+              defaultParams[pKey] = {
                 value: it.defaultVal || '',
                 unit: it.unit || '',
                 range: it.range || ''
