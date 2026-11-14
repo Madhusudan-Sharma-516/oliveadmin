@@ -1112,7 +1112,7 @@ function renderEditorRows() {
         <div class="p-2 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <button type="button" class="btn btn-sm btn-outline-success" onclick="fillUrineDefaults(${i})"><i class="bi bi-magic me-1"></i>Quick Fill Normal Values</button>
-            <span class="badge bg-white text-secondary border small"><i class="bi bi-palette me-1"></i>Color: <b>py</b> = Pale yellow &middot; <b>r</b> = Reddish &middot; <b>n</b> = Normal &middot; <b>yl</b> = Yellowish</span>
+            <span class="badge bg-white text-secondary border small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Shortcuts: Color: <b>py</b>, <b>b</b>=Brownish, <b>yl</b>, <b>r</b> | Appearance: <b>c</b>=Clear, <b>s/sh</b>=Sl. Hazy, <b>h</b>=Hazy, <b>t</b>=Turbid | Reaction: <b>a</b>=Acidic | <b>z</b>=NIL</span>
           </div>
           <span class="small text-muted d-none d-md-inline"><i class="bi bi-info-circle me-1"></i>Siemens Clinitek Status+ Urine Analyzer</span>
         </div>
@@ -1148,7 +1148,7 @@ function renderEditorRows() {
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="badge bg-primary text-white"><i class="bi bi-file-earmark-medical me-1"></i>Form 21 &middot; 4 Pages</span>
             <span class="small text-muted">Page 1: Haematology &middot; Page 2: Biochemistry &amp; Lipid &middot; Page 3: Urine &middot; Page 4: Serology &amp; Stool</span>
-            <span class="badge bg-white text-secondary border small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Shortcuts: <b>z</b>=NIL &middot; Color: <b>y/yl</b>=Yellowish, <b>b/br</b>=Brownish &middot; Stool: <b>ss/py</b>, <b>p/a</b>, <b>n</b> &middot; RH: <b>p/n</b></span>
+            <span class="badge bg-white text-secondary border small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Shortcuts: <b>z</b>=NIL &middot; Urine: <b>c</b>=Clear, <b>s</b>=Sl.Hazy, <b>h</b>=Hazy, <b>t</b>=Turbid, <b>a</b>=Acidic, <b>b</b>=Brownish &middot; Stool: <b>ss</b>=Semi solid, <b>y/yl</b>, <b>b/br</b>, <b>p/a</b>, <b>n</b> &middot; RH: <b>p/n</b></span>
           </div>
           <div class="d-flex gap-2">
             <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2" style="font-size:0.75rem;" onclick="clearForm21Values(${i})"><i class="bi bi-eraser me-1"></i>Clear Values</button>
@@ -1519,9 +1519,9 @@ function initEditorEvents() {
 
     // 2. Stool Consistency shortcut:
     // ss / SS -> SEMI SOLID, py / PY -> PALE YELLOW
-    const isConsistency = (pName === 'consistancy' || pName === 'consistency' || pName.includes('consistan') || pName.includes('consisten'));
+    const isConsistency = (pName === 'consistancy' || pName === 'consistency' || pName === 'consistent' || pName.includes('consist'));
     if (!replacement && isConsistency) {
-      if (lower === 'ss' || lower === 'semi solid') {
+      if (lower === 'ss' || lower === 'semi solid' || lower === 'semi-solid' || lower === 'semisolid') {
         replacement = 'SEMI SOLID';
       } else if (lower === 'py' || lower === 'pele yellow' || lower === 'pale yellow') {
         replacement = 'PALE YELLOW';
@@ -1574,7 +1574,42 @@ function initEditorEvents() {
       }
     }
 
-    // 6. ANY field shortcut: 'z'/'Z' -> 'NIL'
+    // 6. Appearance shortcut (Urine Analysis & other tests):
+    // c / cl / clear -> 'CLEAR'
+    // s / sh / slight / slightly hazy -> 'SLIGHTLY HAZY'
+    // h / hz / hazy -> 'HAZY'
+    // t / tb / turbid -> 'TURBID'
+    const isAppearance = (pName === 'appearance' || pName.includes('appear'));
+    if (!replacement && isAppearance) {
+      if (lower === 'c' || lower === 'cl' || lower === 'clear') {
+        replacement = 'CLEAR';
+      } else if (lower === 's' || lower === 'sh' || lower === 'slight' || lower === 'slightly hazy' || lower === 'slight hazy') {
+        replacement = 'SLIGHTLY HAZY';
+      } else if (lower === 'h' || lower === 'hz' || lower === 'hazy') {
+        replacement = 'HAZY';
+      } else if (lower === 't' || lower === 'tb' || lower === 'turbid') {
+        replacement = 'TURBID';
+      } else if (lower === 'st' || lower === 'slightly turbid') {
+        replacement = 'SLIGHTLY TURBID';
+      }
+    }
+
+    // 7. Reaction shortcut (Urine Analysis & other tests):
+    // a / ac / acid / acidic -> 'ACIDIC'
+    // al / alk / alkaline -> 'ALKALINE'
+    // n / neu / neutral -> 'NEUTRAL'
+    const isReaction = (pName === 'reaction' || pName.includes('reaction') || pName === 'ph');
+    if (!replacement && isReaction) {
+      if (lower === 'a' || lower === 'ac' || lower === 'acid' || lower === 'acidic') {
+        replacement = 'ACIDIC';
+      } else if (lower === 'al' || lower === 'alk' || lower === 'alkaline' || lower === 'alkali') {
+        replacement = 'ALKALINE';
+      } else if (lower === 'n' || lower === 'neu' || lower === 'neutral') {
+        replacement = 'NEUTRAL';
+      }
+    }
+
+    // 8. ANY field shortcut: 'z'/'Z' -> 'NIL'
     if (!replacement && lower === 'z') {
       replacement = 'NIL';
     }

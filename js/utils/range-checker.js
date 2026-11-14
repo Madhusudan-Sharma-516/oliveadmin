@@ -15,7 +15,7 @@ function checkValueRange(valStr, rangeStr) {
     const uVal = rawVal.toUpperCase();
     const uRng = rawRng.toUpperCase();
     if (uRng === 'NIL' || uRng === 'NILL' || uRng === 'NEGATIVE' || uRng === 'ABSENT') {
-      const normalTokens = ['NIL', 'NILL', 'NEGATIVE', 'NEG', '0', '-', 'CLEAR', 'ACIDIC', 'PALE YELLOW', 'NORMAL', 'SEMI SOLID', 'BROWNISH', 'YELLOWISH', 'ABSENT'];
+      const normalTokens = ['NIL', 'NILL', 'NEGATIVE', 'NEG', '0', '-', 'CLEAR', 'ACIDIC', 'PALE YELLOW', 'NORMAL', 'SEMI SOLID', 'BROWNISH', 'YELLOWISH', 'ABSENT', 'SLIGHTLY HAZY', 'HAZY', 'TURBID', 'ALKALINE'];
       if (!normalTokens.includes(uVal)) {
         return 'abnormal';
       }
